@@ -1,23 +1,52 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.0.1'
-	id 'io.spring.dependency-management' version '1.1.0'
+    id 'java'
+    id 'idea'
+    id 'org.springframework.boot' version '2.7.7'
+    id 'io.spring.dependency-management' version '1.1.0'
 }
 
 group = 'org.apache.beam'
-version = '0.0.1-SNAPSHOT'
+version = '2.45.0-SNAPSHOT'
 sourceCompatibility = '17'
 
+def beamVersion = '2.43.0'
+def sparkVersion = '3.3.1'
+def openrewriteVersion = '1.13.1'
+
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-jersey'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation(platform("org.apache.beam:beam-sdks-java-bom:${beamVersion}"))
+    implementation(platform("org.openrewrite.recipe:rewrite-recipe-bom:${openrewriteVersion}"))
+
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    implementation("org.apache.beam:beam-sdks-java-core")
+    implementation("org.apache.spark:spark-core_2.13:${sparkVersion}")
+
+    implementation("org.openrewrite:rewrite-java")
+    implementation("org.openrewrite:rewrite-java-17")
+    testImplementation("org.openrewrite:rewrite-test")
+
+}
+
+configurations {
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
