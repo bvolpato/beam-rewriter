@@ -16,7 +16,7 @@ class TupleToKVRecipeTest implements RewriteTest {
   }
 
   @Test
-  void convertFilter() {
+  void testRewriteTupleToKV() {
     rewriteRun(
         java(
             """

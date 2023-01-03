@@ -18,7 +18,7 @@ class SparkContextTextFileToBeamTextIORecipeTest implements RewriteTest {
   }
 
   @Test
-  void convertWordCount() {
+  void testRewriteTextFile() {
     rewriteRun(java("""
           import org.apache.spark.api.java.JavaRDD;
           import org.apache.spark.api.java.JavaSparkContext;

@@ -18,7 +18,7 @@ class SparkWordCountTest implements RewriteTest {
   }
 
   @Test
-  void convertWordCount() {
+  void testRewriteSparkWordCount() {
     rewriteRun(java("""
           import org.apache.spark.api.java.JavaPairRDD;
           import org.apache.spark.api.java.JavaRDD;

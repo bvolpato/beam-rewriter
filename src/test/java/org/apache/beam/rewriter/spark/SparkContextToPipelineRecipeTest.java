@@ -18,7 +18,7 @@ class SparkContextToPipelineRecipeTest implements RewriteTest {
   }
 
   @Test
-  void convertWordCount() {
+  void testRewriteSparkContext() {
     rewriteRun(java("""
           import org.apache.spark.api.java.JavaRDD;
           import org.apache.spark.api.java.JavaSparkContext;

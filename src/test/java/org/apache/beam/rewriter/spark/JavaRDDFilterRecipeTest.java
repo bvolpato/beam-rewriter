@@ -16,7 +16,7 @@ class JavaRDDFilterRecipeTest implements RewriteTest {
   }
 
   @Test
-  void convertFilter() {
+  void testRewriteFilter() {
     rewriteRun(
         java(
             """

@@ -32,6 +32,8 @@ dependencies {
     implementation("org.openrewrite:rewrite-java-17")
     testImplementation("org.openrewrite:rewrite-test")
 
+    implementation("net.lingala.zip4j:zip4j:2.11.2")
+
 }
 
 configurations {

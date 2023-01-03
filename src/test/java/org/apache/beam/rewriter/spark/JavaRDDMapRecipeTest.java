@@ -16,7 +16,7 @@ class JavaRDDMapRecipeTest implements RewriteTest {
   }
 
   @Test
-  void convertMap() {
+  void testRewriteMap() {
     rewriteRun(
         java(
             """
