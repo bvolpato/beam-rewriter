@@ -29,16 +29,15 @@ function convertProject() {
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", '/convertProject', true);
+  xhr.responseType = "blob";
 
-  xhr.onreadystatechange = () => { // Call a function when the state changes.
+  xhr.onload = function (e) {
     if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-      console.info('response111', xhr.readyState, xhr.status);
-
-      var blob = xhr.response;
+      console.info('response1112', xhr.readyState, xhr.status);
 
       var a = document.createElement('a');
       var type = xhr.getResponseHeader('Content-Type');
-      var blob = new Blob([xhr.response], { type: type });
+      var blob = new Blob([this.response], { type: type });
 
       a.href = URL.createObjectURL(blob);
       a.download = file.name;

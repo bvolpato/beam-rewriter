@@ -64,7 +64,7 @@ public class ConvertController {
   }
 
   @PostMapping("/convertProject")
-  public ResponseEntity<InputStreamResource> convertProject(
+  public ResponseEntity<byte[]> convertProject(
       @RequestPart("cookbook") String cookbook,
       @RequestPart("file") MultipartFile file) throws IOException {
 
@@ -85,7 +85,7 @@ public class ConvertController {
       Path tempZip = Files.createTempFile("beam-rewriter", ".zip");
       Path workingZipFile = Files.write(tempZip, file.getBytes());
 
-      System.out.println("Extract " + tempFolder);
+      System.out.println("Extract tempFolder: " + tempFolder);
       new ZipFile(workingZipFile.toFile()).extractAll(tempFolder.toFile().getAbsolutePath());
 
       List<Path> sourcePaths = Files.find(tempFolder, 999, (p, bfa) ->
@@ -94,18 +94,30 @@ public class ConvertController {
       List<J.CompilationUnit> cus = javaParser.parse(sourcePaths, tempFolder, ctx);
       List<Result> results = recipe.run(cus, ctx).getResults();
       for (Result result : results) {
+        System.out.println("Rewriting " + result.getAfter().getSourcePath());
+
         Files.writeString(tempFolder.resolve(result.getAfter().getSourcePath()),
                 result.getAfter().printAll());
       }
 
-      Path targetZip = tempFolder.resolve(file.getOriginalFilename());
+      Path tempFolderZip = Files.createTempDirectory("beam-rewriter");
+      Path targetZip = tempFolderZip.resolve(file.getOriginalFilename());
+      System.out.println("Extract targetZip: " + targetZip);
 
-      new ZipFile(targetZip.toFile()).addFolder(tempFolder.toFile());
+      ZipFile zipFile = new ZipFile(targetZip.toFile());
+
+      File[] files = tempFolder.toFile().listFiles();
+      for (File addFile : files) {
+        if (addFile.isDirectory()) {
+          zipFile.addFolder(addFile);
+        } else {
+          zipFile.addFile(addFile);
+        }
+      }
 
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
-          .body(new InputStreamResource(
-              new FileInputStream(targetZip.toFile())));
+          .body(Files.readAllBytes(targetZip));
 
     } else {
       Path workingFile = Files.write(tempFolder.resolve(file.getOriginalFilename()), file.getBytes());
@@ -116,8 +128,7 @@ public class ConvertController {
 
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
-          .body(new InputStreamResource(
-              new ByteArrayInputStream(results.get(0).getAfter().printAllAsBytes())));
+          .body(results.get(0).getAfter().printAllAsBytes());
 
     }
 
