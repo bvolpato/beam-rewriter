@@ -13,15 +13,17 @@ class SparkWordCountTest implements RewriteTest {
   public void defaults(RecipeSpec spec) {
 
     spec.recipe(new SparkMigrationCookbook())
-        .parser(JavaParser.fromJavaVersion().classpath("beam", "spark"));
+        .parser(JavaParser.fromJavaVersion().classpath("beam", "spark", "scala"));
 
   }
 
   @Test
   void convertWordCount() {
     rewriteRun(java("""
+          import org.apache.spark.api.java.JavaPairRDD;
           import org.apache.spark.api.java.JavaRDD;
           import org.apache.spark.api.java.JavaSparkContext;
+          import scala.Tuple2;
           
           class Convert {
             public void run(JavaSparkContext sparkContext) {
@@ -30,6 +32,8 @@ class SparkWordCountTest implements RewriteTest {
               JavaRDD<String> filtered = rdd
                 .map(word -> word.toUpperCase())
                 .filter(word -> word.length() > 1);
+                
+              JavaPairRDD<String, Integer> pairRDD = filtered.mapToPair(word -> new Tuple2<>(word, 1));
             }
           }
         """, """
@@ -37,6 +41,7 @@ class SparkWordCountTest implements RewriteTest {
          import org.apache.beam.sdk.io.TextIO;
          import org.apache.beam.sdk.transforms.Filter;
          import org.apache.beam.sdk.transforms.MapElements;
+         import org.apache.beam.sdk.values.KV;
          import org.apache.beam.sdk.values.PCollection;
           
          class Convert {
@@ -46,6 +51,8 @@ class SparkWordCountTest implements RewriteTest {
                  PCollection<String> filtered = rdd
                          .apply("Map", MapElements.via(word -> word.toUpperCase()))
                          .apply("Filter", Filter.by(word -> word.length() > 1));
+                         
+                 PCollection<KV<String, Integer>> pairRDD = filtered.apply("MapPair", MapElements.via(word -> KV.of(word, 1)));
              }
          }
         """));

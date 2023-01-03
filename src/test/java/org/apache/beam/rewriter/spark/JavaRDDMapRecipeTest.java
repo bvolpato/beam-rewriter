@@ -67,7 +67,7 @@ class JavaRDDMapRecipeTest implements RewriteTest {
                   class Convert {
                     public void run(JavaRDD<String> rdd) {
                       JavaPairRDD<String, Integer> filtered = rdd
-                        .apply("Map", MapElements.via(word -> new Tuple2<>(word.toLowerCase(), 1)));
+                        .apply("MapPair", MapElements.via(word -> new Tuple2<>(word.toLowerCase(), 1)));
                     }
                   }
                 """

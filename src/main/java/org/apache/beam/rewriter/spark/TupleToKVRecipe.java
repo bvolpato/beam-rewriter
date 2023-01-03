@@ -73,7 +73,7 @@ public class TupleToKVRecipe extends Recipe {
       if (filterMatcher.matches(newClass)) {
         JavaType.Method ctorType = newClass.getConstructorType();
 
-        J mi = newClass.withTemplate(
+        return newClass.withTemplate(
             JavaTemplate
                 .builder(this::getCursor, "KV.of(#{any()}, #{any()})")
                 .imports("org.apache.beam.sdk.values.KV")
@@ -85,7 +85,6 @@ public class TupleToKVRecipe extends Recipe {
             newClass.getArguments().get(0),
             newClass.getArguments().get(1)
         );
-        return mi;
       }
 
       return super.visitNewClass(newClass, ctx);

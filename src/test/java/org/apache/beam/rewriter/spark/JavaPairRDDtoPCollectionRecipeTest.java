@@ -29,11 +29,12 @@ class JavaPairRDDtoPCollectionRecipeTest implements RewriteTest {
                   }
                 """,
             """
+                import org.apache.beam.sdk.values.KV;
                 import org.apache.beam.sdk.values.PCollection;
                                                                        
                 class Convert {
-                  public void run(PCollection<KV<String, Integer>> rdd) {
-                    PCollection<KV<String, Integer>> filtered = rdd;
+                  public void run(PCollection<KV<String,Integer>> rdd) {
+                    PCollection<KV<String,Integer>> filtered = rdd;
                   }
                 }
                 """

@@ -58,10 +58,12 @@ public class JavaRDDMapRecipe extends Recipe {
     public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method,
         ExecutionContext executionContext) {
       if (filterMatcher.matches(method) || filterPairMatcher.matches(method)) {
+        String name = filterMatcher.matches(method) ? "Map" : "MapPair";
+
         J.MethodInvocation mi = method.withName(method.getName().withSimpleName("apply"))
             .withTemplate(
                 JavaTemplate.builder(this::getCursor,
-                        "#{any(PCollection)}.apply(\"Map\", MapElements.via(#{any(SerializableFunction)}))")
+                        "#{any(PCollection)}.apply(\"" + name + "\", MapElements.via(#{any(SerializableFunction)}))")
                     .imports("org.apache.beam.sdk.transforms.MapElements")
                     .imports("org.apache.beam.sdk.transforms.SerializableFunction").javaParser(
                         () -> JavaParser.fromJavaVersion().classpath("beam-sdks-java-core").build())
