@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BeamRewriterApplication {
+public class RewriterApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(BeamRewriterApplication.class, args);
+    SpringApplication.run(RewriterApplication.class, args);
   }
 
 }

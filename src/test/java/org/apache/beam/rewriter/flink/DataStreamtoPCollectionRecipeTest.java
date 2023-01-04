@@ -1,20 +1,20 @@
-package org.apache.beam.rewriter.spark;
+package org.apache.beam.rewriter.flink;
 
 import static org.openrewrite.java.Assertions.java;
 
 import org.apache.beam.rewriter.common.CookbookEnum;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.apache.beam.rewriter.spark.JavaRDDtoPCollectionRecipe;
 import org.junit.jupiter.api.Test;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
-class JavaRDDtoPCollectionRecipeTest implements RewriteTest {
+class DataStreamtoPCollectionRecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-    spec.recipe(new JavaRDDtoPCollectionRecipe())
-        .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
+    spec.recipe(new DataStreamtoPCollectionRecipe())
+        .parser(CookbookFactory.buildParser(CookbookEnum.FLINK));
   }
 
   @Test
@@ -22,11 +22,11 @@ class JavaRDDtoPCollectionRecipeTest implements RewriteTest {
     rewriteRun(
         java(
             """
-                  import org.apache.spark.api.java.JavaRDD;
+                  import org.apache.flink.streaming.api.datastream.DataStream;
                   
                   class Convert {
-                    public void run(JavaRDD<String> rdd) {
-                      JavaRDD<String> filtered = rdd;
+                    public void run(DataStream<String> rdd) {
+                      DataStream<String> filtered = rdd;
                     }
                   }
                 """,

@@ -2,6 +2,8 @@ package org.apache.beam.rewriter.spark;
 
 import static org.openrewrite.java.Assertions.java;
 
+import org.apache.beam.rewriter.common.CookbookEnum;
+import org.apache.beam.rewriter.common.CookbookFactory;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
@@ -13,7 +15,7 @@ class SparkWordCountTest implements RewriteTest {
   public void defaults(RecipeSpec spec) {
 
     spec.recipe(new SparkMigrationCookbook())
-        .parser(JavaParser.fromJavaVersion().classpath("beam", "spark", "scala"));
+        .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
 
   }
 

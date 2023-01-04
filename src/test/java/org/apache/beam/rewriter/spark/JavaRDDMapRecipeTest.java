@@ -2,6 +2,8 @@ package org.apache.beam.rewriter.spark;
 
 import static org.openrewrite.java.Assertions.java;
 
+import org.apache.beam.rewriter.common.CookbookEnum;
+import org.apache.beam.rewriter.common.CookbookFactory;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
@@ -12,7 +14,7 @@ class JavaRDDMapRecipeTest implements RewriteTest {
   @Override
   public void defaults(RecipeSpec spec) {
     spec.recipe(new JavaRDDMapRecipe())
-        .parser(JavaParser.fromJavaVersion().classpath("spark", "beam", "scala"));
+        .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
   }
 
   @Test

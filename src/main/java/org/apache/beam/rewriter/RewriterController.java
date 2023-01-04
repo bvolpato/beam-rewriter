@@ -1,25 +1,19 @@
 package org.apache.beam.rewriter;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import net.lingala.zip4j.ZipFile;
-import org.apache.beam.rewriter.spark.SparkMigrationCookbook;
+import org.apache.beam.rewriter.common.CookbookConfig;
+import org.apache.beam.rewriter.common.CookbookEnum;
+import org.apache.beam.rewriter.common.CookbookFactory;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
-import org.openrewrite.Recipe;
 import org.openrewrite.Result;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -30,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-public class ConvertController {
+public class RewriterController {
 
   @GetMapping("/recipes")
   public List<String> getRecipes() {
@@ -40,21 +34,15 @@ public class ConvertController {
   @PostMapping("/convert")
   public String convert(String cookbook, String code) throws IOException {
 
-    Recipe recipe = new SparkMigrationCookbook();
-
-    // create a JavaParser instance with your classpath
-    JavaParser javaParser = JavaParser.fromJavaVersion()
-        .classpath("beam", "spark", "scala")
-        .build();
-
+    CookbookConfig cookbookConfig = CookbookFactory.buildCookbook(CookbookEnum.get(cookbook));
     ExecutionContext ctx = new InMemoryExecutionContext(Throwable::printStackTrace);
 
     Path tempFolder = Files.createTempDirectory("beam-rewriter");
     Path file = Files.writeString(tempFolder.resolve("Custom.java"), code);
 
     // parser the source files into LSTs
-    List<J.CompilationUnit> cus = javaParser.parse(List.of(file), tempFolder, ctx);
-    List<Result> results = recipe.run(cus, ctx).getResults();
+    List<J.CompilationUnit> cus = cookbookConfig.getParser().parse(List.of(file), tempFolder, ctx);
+    List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
 
     if (results.isEmpty()) {
       return code;
@@ -69,16 +57,9 @@ public class ConvertController {
       @RequestPart("file") MultipartFile file) throws IOException {
 
     String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
-
-    Recipe recipe = new SparkMigrationCookbook();
-
-    // create a JavaParser instance with your classpath
-    JavaParser javaParser = JavaParser.fromJavaVersion()
-        .classpath("beam", "spark", "scala")
-        .build();
+    CookbookConfig cookbookConfig = CookbookFactory.buildCookbook(CookbookEnum.get(cookbook));
 
     ExecutionContext ctx = new InMemoryExecutionContext(Throwable::printStackTrace);
-
     Path tempFolder = Files.createTempDirectory("beam-rewriter");
 
     if (extension.equals("zip")) {
@@ -91,13 +72,13 @@ public class ConvertController {
       List<Path> sourcePaths = Files.find(tempFolder, 999, (p, bfa) ->
               bfa.isRegularFile() && p.getFileName().toString().endsWith(".java"))
           .collect(Collectors.toList());
-      List<J.CompilationUnit> cus = javaParser.parse(sourcePaths, tempFolder, ctx);
-      List<Result> results = recipe.run(cus, ctx).getResults();
+      List<J.CompilationUnit> cus = cookbookConfig.getParser().parse(sourcePaths, tempFolder, ctx);
+      List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
       for (Result result : results) {
         System.out.println("Rewriting " + result.getAfter().getSourcePath());
 
         Files.writeString(tempFolder.resolve(result.getAfter().getSourcePath()),
-                result.getAfter().printAll());
+            result.getAfter().printAll());
       }
 
       Path tempFolderZip = Files.createTempDirectory("beam-rewriter");
@@ -120,11 +101,13 @@ public class ConvertController {
           .body(Files.readAllBytes(targetZip));
 
     } else {
-      Path workingFile = Files.write(tempFolder.resolve(file.getOriginalFilename()), file.getBytes());
+      Path workingFile = Files.write(tempFolder.resolve(file.getOriginalFilename()),
+          file.getBytes());
 
       // parser the source files into LSTs
-      List<J.CompilationUnit> cus = javaParser.parse(List.of(workingFile), tempFolder, ctx);
-      List<Result> results = recipe.run(cus, ctx).getResults();
+      List<J.CompilationUnit> cus = cookbookConfig.getParser()
+          .parse(List.of(workingFile), tempFolder, ctx);
+      List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
 
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
