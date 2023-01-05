@@ -49,17 +49,14 @@ public class TupleToKVRecipe extends Recipe {
 
   static class Visitor extends JavaVisitor<ExecutionContext> {
 
-    MethodMatcher filterMatcher = new MethodMatcher(
-        "scala.Tuple2 <constructor>(..)",
-        true);
+    MethodMatcher filterMatcher = new MethodMatcher("scala.Tuple2 <constructor>(..)", true);
 
     @Override
-    public J visitMethodInvocation(J.MethodInvocation method,
-        ExecutionContext executionContext) {
+    public J visitMethodInvocation(J.MethodInvocation method, ExecutionContext executionContext) {
       System.out.println("visitMethodInvocation: " + method);
       if (filterMatcher.matches(method)) {
         maybeAddImport("org.apache.beam.sdk.values.KV");
-        //return method;
+        // return method;
       }
 
       return super.visitMethodInvocation(method, executionContext);
@@ -74,17 +71,14 @@ public class TupleToKVRecipe extends Recipe {
         JavaType.Method ctorType = newClass.getConstructorType();
 
         return newClass.withTemplate(
-            JavaTemplate
-                .builder(this::getCursor, "KV.of(#{any()}, #{any()})")
+            JavaTemplate.builder(this::getCursor, "KV.of(#{any()}, #{any()})")
                 .imports("org.apache.beam.sdk.values.KV")
-                .javaParser(() -> JavaParser.fromJavaVersion()
-                    .classpath("beam-sdks-java-core")
-                    .build())
+                .javaParser(
+                    () -> JavaParser.fromJavaVersion().classpath("beam-sdks-java-core").build())
                 .build(),
             newClass.getCoordinates().replace(),
             newClass.getArguments().get(0),
-            newClass.getArguments().get(1)
-        );
+            newClass.getArguments().get(1));
       }
 
       return super.visitNewClass(newClass, ctx);
@@ -93,12 +87,8 @@ public class TupleToKVRecipe extends Recipe {
     @Override
     public J visitCompilationUnit(J.CompilationUnit cu, ExecutionContext ctx) {
       J c = super.visitCompilationUnit(cu, ctx);
-      doAfterVisit(new ChangeType("scala.Tuple2",
-          "org.apache.beam.sdk.values.KV", false));
+      doAfterVisit(new ChangeType("scala.Tuple2", "org.apache.beam.sdk.values.KV", false));
       return c;
     }
-
-
   }
-
 }

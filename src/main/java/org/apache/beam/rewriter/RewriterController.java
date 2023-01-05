@@ -1,5 +1,7 @@
 package org.apache.beam.rewriter;
 
+import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,7 +34,7 @@ public class RewriterController {
   }
 
   @PostMapping("/convert")
-  public String convert(String cookbook, String code) throws IOException {
+  public String convert(String cookbook, String code) throws IOException, FormatterException {
 
     CookbookConfig cookbookConfig = CookbookFactory.buildCookbook(CookbookEnum.get(cookbook));
     ExecutionContext ctx = new InMemoryExecutionContext(Throwable::printStackTrace);
@@ -48,13 +50,17 @@ public class RewriterController {
       return code;
     }
 
-    return results.get(0).getAfter().printAll();
+    try {
+      return new Formatter().formatSource(results.get(0).getAfter().printAll());
+    } catch (Exception e) {
+      return results.get(0).getAfter().printAll();
+    }
   }
 
   @PostMapping("/convertProject")
   public ResponseEntity<byte[]> convertProject(
-      @RequestPart("cookbook") String cookbook,
-      @RequestPart("file") MultipartFile file) throws IOException {
+      @RequestPart("cookbook") String cookbook, @RequestPart("file") MultipartFile file)
+      throws IOException, FormatterException {
 
     String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
     CookbookConfig cookbookConfig = CookbookFactory.buildCookbook(CookbookEnum.get(cookbook));
@@ -69,16 +75,25 @@ public class RewriterController {
       System.out.println("Extract tempFolder: " + tempFolder);
       new ZipFile(workingZipFile.toFile()).extractAll(tempFolder.toFile().getAbsolutePath());
 
-      List<Path> sourcePaths = Files.find(tempFolder, 999, (p, bfa) ->
-              bfa.isRegularFile() && p.getFileName().toString().endsWith(".java"))
-          .collect(Collectors.toList());
+      List<Path> sourcePaths =
+          Files.find(
+                  tempFolder,
+                  999,
+                  (p, bfa) -> bfa.isRegularFile() && p.getFileName().toString().endsWith(".java"))
+              .collect(Collectors.toList());
       List<J.CompilationUnit> cus = cookbookConfig.getParser().parse(sourcePaths, tempFolder, ctx);
       List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
       for (Result result : results) {
         System.out.println("Rewriting " + result.getAfter().getSourcePath());
 
-        Files.writeString(tempFolder.resolve(result.getAfter().getSourcePath()),
-            result.getAfter().printAll());
+        String content = result.getAfter().printAll();
+        try {
+          content = new Formatter().formatSource(content);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+
+        Files.writeString(tempFolder.resolve(result.getAfter().getSourcePath()), content);
       }
 
       Path tempFolderZip = Files.createTempDirectory("beam-rewriter");
@@ -101,20 +116,17 @@ public class RewriterController {
           .body(Files.readAllBytes(targetZip));
 
     } else {
-      Path workingFile = Files.write(tempFolder.resolve(file.getOriginalFilename()),
-          file.getBytes());
+      Path workingFile =
+          Files.write(tempFolder.resolve(file.getOriginalFilename()), file.getBytes());
 
       // parser the source files into LSTs
-      List<J.CompilationUnit> cus = cookbookConfig.getParser()
-          .parse(List.of(workingFile), tempFolder, ctx);
+      List<J.CompilationUnit> cus =
+          cookbookConfig.getParser().parse(List.of(workingFile), tempFolder, ctx);
       List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
 
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
           .body(results.get(0).getAfter().printAllAsBytes());
-
     }
-
-
   }
 }

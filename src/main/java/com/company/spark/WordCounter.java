@@ -14,23 +14,25 @@ public class WordCounter {
 
   public static void main(String[] args) {
 
-    SparkConf sparkConf = new SparkConf()
-        .setMaster("local")
-        .setAppName("WordCount Sample")
-        .set("spark.driver.bindAddress", "127.0.0.1")
-        .set("spark.driver.host", "127.0.0.1");
+    SparkConf sparkConf =
+        new SparkConf()
+            .setMaster("local")
+            .setAppName("WordCount Sample")
+            .set("spark.driver.bindAddress", "127.0.0.1")
+            .set("spark.driver.host", "127.0.0.1");
 
     JavaSparkContext sparkContext = new JavaSparkContext(sparkConf);
 
     JavaRDD<String> inputFile = sparkContext.textFile(FILE_NAME);
 
-    JavaRDD<String> wordsFromFile = inputFile
-        .flatMap(content -> Arrays.stream(content.split(" ")).iterator())
-        .map(word -> word.replaceAll("[^a-zA-Z0-9]", ""))
-        .filter(word -> word.length() > 1);
+    JavaRDD<String> wordsFromFile =
+        inputFile
+            .flatMap(content -> Arrays.stream(content.split(" ")).iterator())
+            .map(word -> word.replaceAll("[^a-zA-Z0-9]", ""))
+            .filter(word -> word.length() > 1);
 
-    JavaPairRDD<String, Integer> countData = wordsFromFile.mapToPair(t -> new Tuple2<>(t, 1))
-        .reduceByKey((x, y) -> x + y);
+    JavaPairRDD<String, Integer> countData =
+        wordsFromFile.mapToPair(t -> new Tuple2<>(t, 1)).reduceByKey((x, y) -> x + y);
 
     countData.saveAsTextFile("target/CountData/" + UUID.randomUUID());
   }

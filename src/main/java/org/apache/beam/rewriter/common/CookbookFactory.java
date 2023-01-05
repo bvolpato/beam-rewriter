@@ -5,9 +5,7 @@ import org.apache.beam.rewriter.flink.FlinkMigrationCookbook;
 import org.apache.beam.rewriter.spark.SparkMigrationCookbook;
 import org.openrewrite.java.JavaParser;
 
-/**
- * Factory class for Beam Rewriter instances.
- */
+/** Factory class for Beam Rewriter instances. */
 public final class CookbookFactory {
 
   /**
@@ -19,11 +17,11 @@ public final class CookbookFactory {
   public static CookbookConfig buildCookbook(CookbookEnum cookbook) {
     switch (cookbook) {
       case SPARK:
-        return new CookbookConfig("Beam to Spark", new SparkMigrationCookbook(),
-            buildParser(cookbook).build());
+        return new CookbookConfig(
+            "Beam to Spark", new SparkMigrationCookbook(), buildParser(cookbook).build());
       case FLINK:
-        return new CookbookConfig("Beam to Flink", new FlinkMigrationCookbook(),
-            buildParser(cookbook).build());
+        return new CookbookConfig(
+            "Beam to Flink", new FlinkMigrationCookbook(), buildParser(cookbook).build());
       default:
         throw new IllegalArgumentException("Invalid cookbook: " + cookbook);
     }
@@ -39,7 +37,6 @@ public final class CookbookFactory {
       default:
         throw new IllegalArgumentException("Invalid cookbook for parser: " + cookbook);
     }
-
   }
 
   public static Supplier<JavaParser> beamParser() {

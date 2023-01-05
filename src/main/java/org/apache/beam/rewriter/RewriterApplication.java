@@ -9,5 +9,4 @@ public class RewriterApplication {
   public static void main(String[] args) {
     SpringApplication.run(RewriterApplication.class, args);
   }
-
 }

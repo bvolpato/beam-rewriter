@@ -8,37 +8,40 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
-class JavaRDDMapRecipeTest implements RewriteTest {
+class JavaRDDMapToPairRecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-    spec.recipe(new JavaRDDMapRecipe())
+    spec.recipe(new JavaRDDMapToPairRecipe())
         .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
   }
 
   @Test
-  void testRewriteMap() {
+  void convertMapToPair() {
     rewriteRun(
         java(
             """
+                  import org.apache.spark.api.java.JavaPairRDD;
                   import org.apache.spark.api.java.JavaRDD;
                   
                   class Convert {
                     public void run(JavaRDD<String> rdd) {
-                      JavaRDD<String> filtered = rdd
-                        .map(word -> word.toLowerCase());
+                      JavaPairRDD<String, Integer> filtered = rdd
+                        .mapToPair(word -> new Tuple2<>(word.toLowerCase(), 1));
                     }
                   }
                 """,
             """
                   import org.apache.beam.sdk.transforms.MapElements;
+                  import org.apache.beam.sdk.values.TypeDescriptor;
                   import org.apache.beam.sdk.values.TypeDescriptors;
+                  import org.apache.spark.api.java.JavaPairRDD;
                   import org.apache.spark.api.java.JavaRDD;
                   
                   class Convert {
                     public void run(JavaRDD<String> rdd) {
-                      JavaRDD<String> filtered = rdd
-                        .apply("Map", MapElements.into(TypeDescriptors.strings()).via(word -> word.toLowerCase()));
+                      JavaPairRDD<String, Integer> filtered = rdd
+                        .apply("MapToPair", MapElements.into(TypeDescriptors.kvs(TypeDescriptor.of(String.class), TypeDescriptor.of(Integer.class))).via(word -> new Tuple2<>(word.toLowerCase(), 1)));
                     }
                   }
                 """

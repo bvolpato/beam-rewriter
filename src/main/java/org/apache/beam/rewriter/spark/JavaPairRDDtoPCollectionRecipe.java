@@ -3,7 +3,6 @@ package org.apache.beam.rewriter.spark;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.openrewrite.ExecutionContext;
@@ -12,11 +11,7 @@ import org.openrewrite.Tree;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.ChangeType;
-import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.JavaParser;
-import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.JavaVisitor;
-import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.TypeMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.Expression;
@@ -67,16 +62,17 @@ public class JavaPairRDDtoPCollectionRecipe extends Recipe {
 
   static class Visitor extends JavaVisitor<ExecutionContext> {
 
-    final TypeMatcher typeMatcher = new TypeMatcher(
-        "org.apache.spark.api.java.JavaPairRDD",
-        true);
+    final TypeMatcher typeMatcher = new TypeMatcher("org.apache.spark.api.java.JavaPairRDD", true);
 
     @Override
     public J visitCompilationUnit(J.CompilationUnit cu, ExecutionContext ctx) {
       J c = super.visitCompilationUnit(cu, ctx);
 
-      doAfterVisit(new ChangeType("org.apache.spark.api.java.JavaPairRDD",
-          "org.apache.beam.sdk.values.PCollection", true));
+      doAfterVisit(
+          new ChangeType(
+              "org.apache.spark.api.java.JavaPairRDD",
+              "org.apache.beam.sdk.values.PCollection",
+              true));
       return c;
     }
 
@@ -84,58 +80,45 @@ public class JavaPairRDDtoPCollectionRecipe extends Recipe {
     public J visitParameterizedType(J.ParameterizedType t2, ExecutionContext ctx) {
       J.ParameterizedType t = (ParameterizedType) super.visitParameterizedType(t2, ctx);
       if (typeMatcher.matches(t)) {
-        JavaType.Class pCollectionTyped = JavaType.ShallowClass.build(
-            "org.apache.beam.sdk.values.PCollection").withTypeParameters(
-            List.of(ShallowClass.build("org.apache.beam.sdk.values.KV")
-                .withTypeParameters(List.of(t.getTypeParameters().get(0).getType(),
-                    t.getTypeParameters().get(1).getType()))));
+        JavaType.Class pCollectionTyped =
+            JavaType.ShallowClass.build("org.apache.beam.sdk.values.PCollection")
+                .withTypeParameters(
+                    List.of(
+                        ShallowClass.build("org.apache.beam.sdk.values.KV")
+                            .withTypeParameters(
+                                List.of(
+                                    t.getTypeParameters().get(0).getType(),
+                                    t.getTypeParameters().get(1).getType()))));
 
         maybeAddImport("org.apache.beam.sdk.values.KV");
         maybeAddImport("org.apache.beam.sdk.values.PCollection");
         return buildTypeTree(pCollectionTyped, Space.EMPTY);
-
       }
-      return super.visitParameterizedType(t, ctx);
+      return t;
     }
-
 
     @Nullable
     private TypeTree buildTypeTree(@Nullable JavaType type, Space space) {
       if (type == null || type instanceof JavaType.Unknown) {
         return null;
       } else if (type instanceof JavaType.Primitive) {
-        return new J.Primitive(
-            Tree.randomId(),
-            space,
-            Markers.EMPTY,
-            (JavaType.Primitive) type
-        );
+        return new J.Primitive(Tree.randomId(), space, Markers.EMPTY, (JavaType.Primitive) type);
       } else if (type instanceof JavaType.FullyQualified) {
 
         JavaType.FullyQualified fq = (JavaType.FullyQualified) type;
 
-        J.Identifier identifier = new J.Identifier(Tree.randomId(),
-            space,
-            Markers.EMPTY,
-            fq.getClassName(),
-            type,
-            null
-        );
+        J.Identifier identifier =
+            new J.Identifier(Tree.randomId(), space, Markers.EMPTY, fq.getClassName(), type, null);
 
         if (!fq.getTypeParameters().isEmpty()) {
           JContainer<Expression> typeParameters = buildTypeParameters(fq.getTypeParameters());
           if (typeParameters == null) {
-            //If there is a problem resolving one of the type parameters, then do not return a type
-            //expression for the fully-qualified type.
+            // If there is a problem resolving one of the type parameters, then do not return a type
+            // expression for the fully-qualified type.
             return null;
           }
           return new J.ParameterizedType(
-              Tree.randomId(),
-              space,
-              Markers.EMPTY,
-              identifier,
-              typeParameters
-          );
+              Tree.randomId(), space, Markers.EMPTY, identifier, typeParameters);
 
         } else {
           maybeAddImport(fq);
@@ -149,13 +132,8 @@ public class JavaPairRDDtoPCollectionRecipe extends Recipe {
         JavaType.GenericTypeVariable genericType = (JavaType.GenericTypeVariable) type;
 
         if (!genericType.getName().equals("?")) {
-          return new J.Identifier(Tree.randomId(),
-              space,
-              Markers.EMPTY,
-              genericType.getName(),
-              type,
-              null
-          );
+          return new J.Identifier(
+              Tree.randomId(), space, Markers.EMPTY, genericType.getName(), type, null);
         }
         JLeftPadded<Bound> bound = null;
         NameTree boundedType = null;
@@ -173,13 +151,7 @@ public class JavaPairRDDtoPCollectionRecipe extends Recipe {
           }
         }
 
-        return new J.Wildcard(
-            Tree.randomId(),
-            space,
-            Markers.EMPTY,
-            bound,
-            boundedType
-        );
+        return new J.Wildcard(Tree.randomId(), space, Markers.EMPTY, bound, boundedType);
       }
       return null;
     }
@@ -193,15 +165,10 @@ public class JavaPairRDDtoPCollectionRecipe extends Recipe {
         if (typeParameterExpression == null) {
           return null;
         }
-        typeExpressions.add(new JRightPadded<>(
-            typeParameterExpression,
-            Space.EMPTY,
-            Markers.EMPTY
-        ));
+        typeExpressions.add(
+            new JRightPadded<>(typeParameterExpression, Space.EMPTY, Markers.EMPTY));
       }
       return JContainer.build(Space.EMPTY, typeExpressions, Markers.EMPTY);
     }
-
   }
-
 }

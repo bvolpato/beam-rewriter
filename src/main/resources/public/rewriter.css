@@ -1,7 +1,8 @@
 .rewriterBar {
-  float: left ;
+  float: left;
   margin: 5px 5px 5px 5px;
 }
+
 .rewriterBarRight {
   float: right;
   margin-top: 5px;
@@ -33,7 +34,7 @@
 }
 
 .rewriterSnippet {
-  background: rgba(255,109,0,.03);
+  background: rgba(255, 109, 0, .03);
   border-radius: 8px;
   border: solid 0.6px #ff6d05;
   font-family: Menlo;

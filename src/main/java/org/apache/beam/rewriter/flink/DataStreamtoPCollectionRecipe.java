@@ -3,7 +3,6 @@ package org.apache.beam.rewriter.flink;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -49,10 +48,12 @@ public class DataStreamtoPCollectionRecipe extends Recipe {
     @Override
     public J.CompilationUnit visitCompilationUnit(J.CompilationUnit cu, ExecutionContext ctx) {
       J.CompilationUnit c = super.visitCompilationUnit(cu, ctx);
-      doAfterVisit(new ChangeType("org.apache.flink.streaming.api.datastream.DataStream",
-          "org.apache.beam.sdk.values.PCollection", true));
+      doAfterVisit(
+          new ChangeType(
+              "org.apache.flink.streaming.api.datastream.DataStream",
+              "org.apache.beam.sdk.values.PCollection",
+              true));
       return c;
     }
   }
-
 }

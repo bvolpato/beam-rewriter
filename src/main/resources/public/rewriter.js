@@ -24,7 +24,6 @@ function runCookbook() {
 
 }
 
-
 function convertProject() {
   console.info('Cookbook Project!')
   var cookbook = document.getElementsByName("cookbook")[0].value;
@@ -40,7 +39,7 @@ function convertProject() {
 
       var a = document.createElement('a');
       var type = xhr.getResponseHeader('Content-Type');
-      var blob = new Blob([this.response], { type: type });
+      var blob = new Blob([this.response], {type: type});
 
       a.href = URL.createObjectURL(blob);
       a.download = file.name;

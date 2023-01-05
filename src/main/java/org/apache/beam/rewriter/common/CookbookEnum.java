@@ -1,8 +1,6 @@
 package org.apache.beam.rewriter.common;
 
-/**
- * Cookbooks allowed on the rewriter.
- */
+/** Cookbooks allowed on the rewriter. */
 public enum CookbookEnum {
   SPARK,
   FLINK;

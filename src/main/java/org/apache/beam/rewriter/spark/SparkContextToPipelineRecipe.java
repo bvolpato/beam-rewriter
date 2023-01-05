@@ -8,14 +8,11 @@ import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.ChangeType;
-import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
-import org.openrewrite.java.tree.J.VariableDeclarations.NamedVariable;
 import org.openrewrite.java.tree.JavaType;
 
 public class SparkContextToPipelineRecipe extends Recipe {
@@ -50,17 +47,16 @@ public class SparkContextToPipelineRecipe extends Recipe {
     return new Visitor();
   }
 
-
   static class Visitor extends JavaVisitor<ExecutionContext> {
-    MethodMatcher pipelineConstructorMatcher = new MethodMatcher(
-        "org.apache.spark.api.java.JavaSparkContext <constructor>(..)",
-        true);
+    MethodMatcher pipelineConstructorMatcher =
+        new MethodMatcher("org.apache.spark.api.java.JavaSparkContext <constructor>(..)", true);
 
     @Override
     public J.CompilationUnit visitCompilationUnit(J.CompilationUnit cu, ExecutionContext ctx) {
       J.CompilationUnit c = (J.CompilationUnit) super.visitCompilationUnit(cu, ctx);
-      doAfterVisit(new ChangeType("org.apache.spark.api.java.JavaSparkContext",
-          "org.apache.beam.sdk.Pipeline", true));
+      doAfterVisit(
+          new ChangeType(
+              "org.apache.spark.api.java.JavaSparkContext", "org.apache.beam.sdk.Pipeline", true));
       return c;
     }
 
@@ -80,19 +76,15 @@ public class SparkContextToPipelineRecipe extends Recipe {
         JavaType.Method ctorType = newClass.getConstructorType();
 
         return newClass.withTemplate(
-            JavaTemplate
-                .builder(this::getCursor, "Pipeline.create(#{any()})")
+            JavaTemplate.builder(this::getCursor, "Pipeline.create(#{any()})")
                 .imports("org.apache.beam.sdk.Pipeline")
                 .javaParser(CookbookFactory.beamParser())
                 .build(),
             newClass.getCoordinates().replace(),
-            newClass.getArguments().get(0)
-        );
+            newClass.getArguments().get(0));
       }
 
       return super.visitNewClass(newClass, ctx);
     }
-
   }
-
 }

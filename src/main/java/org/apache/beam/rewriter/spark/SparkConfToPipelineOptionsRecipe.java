@@ -52,8 +52,9 @@ public class SparkConfToPipelineOptionsRecipe extends Recipe {
     @Override
     public J visitCompilationUnit(J.CompilationUnit cu, ExecutionContext ctx) {
       J c = super.visitCompilationUnit(cu, ctx);
-      doAfterVisit(new ChangeType("org.apache.spark.SparkConf",
-          "org.apache.beam.sdk.options.PipelineOptions", true));
+      doAfterVisit(
+          new ChangeType(
+              "org.apache.spark.SparkConf", "org.apache.beam.sdk.options.PipelineOptions", true));
       return c;
     }
 
@@ -63,17 +64,18 @@ public class SparkConfToPipelineOptionsRecipe extends Recipe {
       System.out.println("visitVariable: " + v);
 
       if (v.getType() instanceof JavaType.Class
-          && ((JavaType.Class) v.getType()).getFullyQualifiedName()
-          .equals("org.apache.spark.SparkConf")) {
-        v = v.withInitializer(v.getInitializer()
-            .withTemplate(
-                JavaTemplate.builder(this::getCursor,
-                        "PipelineOptionsFactory.create()")
-                    .imports("org.apache.beam.sdk.options.PipelineOptionsFactory")
-                    .javaParser(CookbookFactory.beamParser())
-                    .build(),
-                v.getInitializer().getCoordinates().replace()
-            ));
+          && ((JavaType.Class) v.getType())
+              .getFullyQualifiedName()
+              .equals("org.apache.spark.SparkConf")) {
+        v =
+            v.withInitializer(
+                v.getInitializer()
+                    .withTemplate(
+                        JavaTemplate.builder(this::getCursor, "PipelineOptionsFactory.create()")
+                            .imports("org.apache.beam.sdk.options.PipelineOptionsFactory")
+                            .javaParser(CookbookFactory.beamParser())
+                            .build(),
+                        v.getInitializer().getCoordinates().replace()));
 
         maybeAddImport("org.apache.beam.sdk.options.PipelineOptionsFactory");
         return v;
@@ -90,7 +92,5 @@ public class SparkConfToPipelineOptionsRecipe extends Recipe {
       }
       return identifier;
     }
-
   }
-
 }

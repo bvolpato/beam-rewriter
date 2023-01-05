@@ -13,11 +13,11 @@ import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
-public class SparkContextTextFileToBeamTextIORecipe extends Recipe {
+public class JavaRDDReduceByKeyRecipe extends Recipe {
 
   @Override
   public String getDisplayName() {
-    return "Replaces SparkContext `textFile` with a TextIO transform";
+    return "Replaces JavaRDD Filter with a Filter transform";
   }
 
   @Override
@@ -37,7 +37,7 @@ public class SparkContextTextFileToBeamTextIORecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.JavaSparkContext");
+    return new UsesType<>("org.apache.spark.api.java.JavaPairRDD");
   }
 
   @Override
@@ -48,21 +48,22 @@ public class SparkContextTextFileToBeamTextIORecipe extends Recipe {
   static class Visitor extends JavaIsoVisitor<ExecutionContext> {
 
     final MethodMatcher filterMatcher =
-        new MethodMatcher(
-            "org.apache.spark.api.java.JavaSparkContext textFile(java.lang.String)", false);
+        new MethodMatcher("org.apache.spark.api.java.JavaPairRDD reduceByKey(..)", false);
 
     @Override
     public J.MethodInvocation visitMethodInvocation(
         J.MethodInvocation method, ExecutionContext executionContext) {
+      J.MethodInvocation mi = super.visitMethodInvocation(method, executionContext);
       if (filterMatcher.matches(method)) {
-        J.MethodInvocation mi =
+        mi =
             method
                 .withName(method.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
-                            "#{any(Pipeline)}.apply(\"ReadTextFile\", TextIO.read().from(#{any(java.lang.String)}))")
-                        .imports("org.apache.beam.sdk.io.TextIO")
+                            "#{any(PCollection)}.apply(\"CombinePerKey\", Combine.perKey(#{any(SerializableFunction)}))")
+                        .imports("org.apache.beam.sdk.transforms.Combine")
+                        .imports("org.apache.beam.sdk.transforms.SerializableFunction")
                         .javaParser(
                             () ->
                                 JavaParser.fromJavaVersion()
@@ -72,10 +73,10 @@ public class SparkContextTextFileToBeamTextIORecipe extends Recipe {
                     method.getCoordinates().replaceMethod(),
                     method.getSelect(),
                     method.getArguments().get(0));
-        maybeAddImport("org.apache.beam.sdk.io.TextIO");
+        maybeAddImport("org.apache.beam.sdk.transforms.Combine");
         return mi;
       } else {
-        return super.visitMethodInvocation(method, executionContext);
+        return mi;
       }
     }
   }

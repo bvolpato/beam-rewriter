@@ -3,9 +3,7 @@ package org.apache.beam.rewriter.common;
 import org.openrewrite.Recipe;
 import org.openrewrite.java.JavaParser;
 
-/**
- * Configuration holder for Beam Rewriter.
- */
+/** Configuration holder for Beam Rewriter. */
 public class CookbookConfig {
 
   private final String name;

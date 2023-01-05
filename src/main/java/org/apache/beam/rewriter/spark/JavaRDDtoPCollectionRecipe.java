@@ -48,10 +48,10 @@ public class JavaRDDtoPCollectionRecipe extends Recipe {
     @Override
     public J.CompilationUnit visitCompilationUnit(J.CompilationUnit cu, ExecutionContext ctx) {
       J.CompilationUnit c = super.visitCompilationUnit(cu, ctx);
-      doAfterVisit(new ChangeType("org.apache.spark.api.java.JavaRDD",
-          "org.apache.beam.sdk.values.PCollection", true));
+      doAfterVisit(
+          new ChangeType(
+              "org.apache.spark.api.java.JavaRDD", "org.apache.beam.sdk.values.PCollection", true));
       return c;
     }
   }
-
 }

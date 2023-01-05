@@ -8,33 +8,36 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
-class TupleToKVRecipeTest implements RewriteTest {
+class JavaRDDReduceByKeyRecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-    spec.recipe(new TupleToKVRecipe())
+    spec.recipe(new JavaRDDReduceByKeyRecipe())
         .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
   }
 
   @Test
-  void testRewriteTupleToKV() {
+  void testRewriteFilter() {
     rewriteRun(
         java(
             """
-                  import scala.Tuple2;
+                  import org.apache.spark.api.java.JavaPairRDD;
                   
                   class Convert {
-                    public void run() {
-                      Tuple2<String, Integer> maps = new Tuple2<>("a", 1);
+                    public void run(JavaPairRDD<String, Integer> rdd) {
+                      JavaPairRDD<String, Integer> combined = rdd
+                        .reduceByKey((x, y) -> x + y);
                     }
                   }
                 """,
             """
-                  import org.apache.beam.sdk.values.KV;
+                  import org.apache.beam.sdk.transforms.Combine;
+                  import org.apache.spark.api.java.JavaPairRDD;
                   
                   class Convert {
-                    public void run() {
-                      KV<String, Integer> maps = KV.of("a", 1);
+                    public void run(JavaPairRDD<String, Integer> rdd) {
+                      JavaPairRDD<String, Integer> combined = rdd
+                        .apply("CombinePerKey", Combine.perKey((x, y) -> x + y));
                     }
                   }
                 """

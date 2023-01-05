@@ -3,21 +3,23 @@ package org.apache.beam.rewriter.spark;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
+import org.apache.beam.rewriter.common.CookbookFactory;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.tree.JavaType.Parameterized;
 
-public class JavaRDDFilterRecipe extends Recipe {
+public class JavaRDDMapToPairRecipe extends Recipe {
 
   @Override
   public String getDisplayName() {
-    return "Replaces JavaRDD Filter with a Filter transform";
+    return "Replaces JavaRDD MapToPair with a MapElements transform";
   }
 
   @Override
@@ -37,7 +39,7 @@ public class JavaRDDFilterRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.JavaRDD");
+    return new UsesType<>("org.apache.spark.api.java.AbstractJavaRDDLike");
   }
 
   @Override
@@ -47,34 +49,40 @@ public class JavaRDDFilterRecipe extends Recipe {
 
   static class Visitor extends JavaIsoVisitor<ExecutionContext> {
 
-    final MethodMatcher filterMatcher =
-        new MethodMatcher(
-            "org.apache.spark.api.java.JavaRDD filter(org.apache.spark.api.java.function.Function)",
-            false);
+    final MethodMatcher filterPairMatcher =
+        new MethodMatcher("org.apache.spark.api.java.AbstractJavaRDDLike mapToPair(..)", false);
 
     @Override
     public J.MethodInvocation visitMethodInvocation(
         J.MethodInvocation method, ExecutionContext executionContext) {
-      if (filterMatcher.matches(method)) {
+      if (filterPairMatcher.matches(method)) {
+        Parameterized parameterized = (Parameterized) method.getArguments().get(0).getType();
+        String type1 = ((JavaType.Class) parameterized.getTypeParameters().get(1)).getClassName();
+        String type2 = ((JavaType.Class) parameterized.getTypeParameters().get(2)).getClassName();
+
         J.MethodInvocation mi =
             method
                 .withName(method.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
-                            "#{any(PCollection)}.apply(\"Filter\", Filter.by(#{any(SerializableFunction)}))")
-                        .imports("org.apache.beam.sdk.transforms.Filter")
+                            "#{any(PCollection)}.apply(\"MapToPair\", MapElements.into(TypeDescriptors.kvs(TypeDescriptor.of("
+                                + type1
+                                + ".class), TypeDescriptor.of("
+                                + type2
+                                + ".class))).via(#{any(SerializableFunction)}))")
+                        .imports("org.apache.beam.sdk.transforms.MapElements")
                         .imports("org.apache.beam.sdk.transforms.SerializableFunction")
-                        .javaParser(
-                            () ->
-                                JavaParser.fromJavaVersion()
-                                    .classpath("beam-sdks-java-core")
-                                    .build())
+                        .imports("org.apache.beam.sdk.values.TypeDescriptor")
+                        .imports("org.apache.beam.sdk.values.TypeDescriptors")
+                        .javaParser(CookbookFactory.beamParser())
                         .build(),
                     method.getCoordinates().replaceMethod(),
                     method.getSelect(),
                     method.getArguments().get(0));
-        maybeAddImport("org.apache.beam.sdk.transforms.Filter");
+        maybeAddImport("org.apache.beam.sdk.transforms.MapElements");
+        maybeAddImport("org.apache.beam.sdk.values.TypeDescriptor");
+        maybeAddImport("org.apache.beam.sdk.values.TypeDescriptors");
         return mi;
       } else {
         return super.visitMethodInvocation(method, executionContext);
