@@ -1,5 +1,6 @@
 package org.apache.beam.rewriter.common;
 
+import java.util.function.Supplier;
 import org.apache.beam.rewriter.flink.FlinkMigrationCookbook;
 import org.apache.beam.rewriter.spark.SparkMigrationCookbook;
 import org.openrewrite.java.JavaParser;
@@ -39,5 +40,9 @@ public final class CookbookFactory {
         throw new IllegalArgumentException("Invalid cookbook for parser: " + cookbook);
     }
 
+  }
+
+  public static Supplier<JavaParser> beamParser() {
+    return () -> JavaParser.fromJavaVersion().classpath("beam-sdks-java-core").build();
   }
 }

@@ -13,10 +13,8 @@ class SparkContextTextFileToBeamTextIORecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-
     spec.recipe(new SparkContextTextFileToBeamTextIORecipe())
         .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
-
   }
 
   @Test

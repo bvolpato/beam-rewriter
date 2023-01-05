@@ -22,6 +22,7 @@ public class SparkMigrationCookbook extends Recipe {
     doNext(new JavaRDDtoPCollectionRecipe());
     doNext(new JavaPairRDDtoPCollectionRecipe());
     doNext(new SparkContextTextFileToBeamTextIORecipe());
+    doNext(new SparkConfToPipelineOptionsRecipe());
     doNext(new SparkContextToPipelineRecipe());
     doNext(new AutoFormat());
   }

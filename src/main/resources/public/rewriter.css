@@ -43,3 +43,7 @@
   letter-spacing: .43px;
   max-width: 100%;
 }
+
+.navbar-link {
+  color: #f16d20;
+}

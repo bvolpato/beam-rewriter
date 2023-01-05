@@ -33,12 +33,13 @@ class JavaRDDMapRecipeTest implements RewriteTest {
                 """,
             """
                   import org.apache.beam.sdk.transforms.MapElements;
+                  import org.apache.beam.sdk.values.TypeDescriptor;
                   import org.apache.spark.api.java.JavaRDD;
                   
                   class Convert {
                     public void run(JavaRDD<String> rdd) {
                       JavaRDD<String> filtered = rdd
-                        .apply("Map", MapElements.via(word -> word.toLowerCase()));
+                        .apply("Map", MapElements.into(TypeDescriptor.of(String.class)).via(word -> word.toLowerCase()));
                     }
                   }
                 """
@@ -63,13 +64,14 @@ class JavaRDDMapRecipeTest implements RewriteTest {
                 """,
             """
                   import org.apache.beam.sdk.transforms.MapElements;
+                  import org.apache.beam.sdk.values.TypeDescriptor;
                   import org.apache.spark.api.java.JavaPairRDD;
                   import org.apache.spark.api.java.JavaRDD;
                   
                   class Convert {
                     public void run(JavaRDD<String> rdd) {
                       JavaPairRDD<String, Integer> filtered = rdd
-                        .apply("MapPair", MapElements.via(word -> new Tuple2<>(word.toLowerCase(), 1)));
+                        .apply("MapPair", MapElements.into(TypeDescriptor.of(String.class)).via(word -> new Tuple2<>(word.toLowerCase(), 1)));
                     }
                   }
                 """

@@ -3,6 +3,7 @@ package org.apache.beam.rewriter.spark;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
+import org.apache.beam.rewriter.common.CookbookFactory;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -12,6 +13,7 @@ import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
 
 public class JavaRDDMapRecipe extends Recipe {
 
@@ -59,17 +61,23 @@ public class JavaRDDMapRecipe extends Recipe {
         ExecutionContext executionContext) {
       if (filterMatcher.matches(method) || filterPairMatcher.matches(method)) {
         String name = filterMatcher.matches(method) ? "Map" : "MapPair";
+        String type = ((JavaType.Class) ((JavaType.Parameterized) method.getArguments().get(0)
+            .getType()).getTypeParameters().get(0)).getClassName();
 
         J.MethodInvocation mi = method.withName(method.getName().withSimpleName("apply"))
             .withTemplate(
                 JavaTemplate.builder(this::getCursor,
-                        "#{any(PCollection)}.apply(\"" + name + "\", MapElements.via(#{any(SerializableFunction)}))")
+                        "#{any(PCollection)}.apply(\"" + name
+                            + "\", MapElements.into(TypeDescriptor.of(" + type
+                            + ".class)).via(#{any(SerializableFunction)}))")
                     .imports("org.apache.beam.sdk.transforms.MapElements")
-                    .imports("org.apache.beam.sdk.transforms.SerializableFunction").javaParser(
-                        () -> JavaParser.fromJavaVersion().classpath("beam-sdks-java-core").build())
+                    .imports("org.apache.beam.sdk.transforms.SerializableFunction")
+                    .imports("org.apache.beam.sdk.values.TypeDescriptor")
+                    .javaParser(CookbookFactory.beamParser())
                     .build(), method.getCoordinates().replaceMethod(), method.getSelect(),
                 method.getArguments().get(0));
         maybeAddImport("org.apache.beam.sdk.transforms.MapElements");
+        maybeAddImport("org.apache.beam.sdk.values.TypeDescriptor");
         return mi;
       } else {
         return super.visitMethodInvocation(method, executionContext);
