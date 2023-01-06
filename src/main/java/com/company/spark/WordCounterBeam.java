@@ -2,7 +2,6 @@ package com.company.spark;
 
 import java.util.Arrays;
 import java.util.UUID;
-
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -14,12 +13,18 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WordCounterBeam {
+
+  private static final Logger LOG = LoggerFactory.getLogger(WordCounterBeam.class);
 
   private static final String FILE_NAME = "samples/shakespeare.txt";
 
   public static void main(String[] args) {
+
+    LOG.info("Building pipeline...");
 
     PipelineOptions pipelineOptions = PipelineOptionsFactory.create();
 
@@ -29,10 +34,10 @@ public class WordCounterBeam {
 
     PCollection<String> wordsFromFile =
         inputFile
-            //.apply(
-            //    "FlatMap",
-            //    FlatMapElements.into(TypeDescriptors.strings())
-            //        .via(content -> Arrays.stream(content.split(" ")).iterator()))
+            .apply(
+                "FlatMap",
+                FlatMapElements.into(TypeDescriptors.strings())
+                    .via(content -> Arrays.asList(content.split(" "))))
             .apply(
                 "Map",
                 MapElements.into(TypeDescriptors.strings())

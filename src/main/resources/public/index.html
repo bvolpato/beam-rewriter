@@ -100,19 +100,23 @@
       <div class="rewriterBar">
         <label for="cookbook"><strong>Cookbook:</strong></label>
         <select class="cookbookChoice" id="cookbook" name="cookbook">
-          <option value="spark">Apache Spark to Apache Beam</option>
-          <option value="flink">Apache Spark to Apache Flink</option>
+          <option value="spark">Spark to Beam</option>
+          <option value="flink">Flink to Flink</option>
+          <option value="beam">Icing on my Beam pipeline</option>
         </select>
         <button class="convertButton" onclick="runCookbook()">▶︎ Cook!</button>
       </div>
+
+
       <div class="rewriterBarRight">
         or upload your code!
         <input id="project" name="file" onchange="convertProject()" type="file"/>
 
       </div>
 
-      <div class="rewriterSnippet playground">
+      <div id="loader" ></div>
 
+      <div class="rewriterSnippet playground">
         <div class="rewriterCode" id="editor">package com.company.spark;
 
 import java.util.Arrays;

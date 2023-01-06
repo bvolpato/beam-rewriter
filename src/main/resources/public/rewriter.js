@@ -4,8 +4,16 @@ var editor = ace.edit("editor");
 editor.setTheme("ace/theme/xcode");
 editor.session.setMode("ace/mode/java");
 
+function loaderOn() {
+  document.getElementById("loader").classList.add("loader");
+}
+function loaderOff() {
+  document.getElementById("loader").classList.remove("loader");
+}
+
 function runCookbook() {
-  console.info('Cookbook!')
+  loaderOn();
+
   var cookbook = document.getElementsByName("cookbook")[0].value;
 
   const xhr = new XMLHttpRequest();
@@ -18,6 +26,8 @@ function runCookbook() {
     if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
       editor.setValue(xhr.responseText, -1);
     }
+
+    loaderOff();
   }
   xhr.send("cookbook=" + encodeURIComponent(cookbook) + "&code="
       + encodeURIComponent(editor.getValue()));
@@ -25,7 +35,8 @@ function runCookbook() {
 }
 
 function convertProject() {
-  console.info('Cookbook Project!')
+  loaderOn();
+
   var cookbook = document.getElementsByName("cookbook")[0].value;
   var file = document.getElementsByName("file")[0].files[0];
 
@@ -45,6 +56,9 @@ function convertProject() {
       a.download = file.name;
       a.dispatchEvent(new MouseEvent('click'));
     }
+
+    loaderOff();
+
   }
 
   var formData = new FormData();

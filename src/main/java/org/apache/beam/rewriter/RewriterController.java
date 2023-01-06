@@ -2,6 +2,7 @@ package org.apache.beam.rewriter;
 
 import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
+import com.google.googlejavaformat.java.JavaFormatterOptions;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -51,11 +52,7 @@ public class RewriterController {
       return code;
     }
 
-    try {
-      return new Formatter().formatSource(results.get(0).getAfter().printAll());
-    } catch (Exception e) {
-      return results.get(0).getAfter().printAll();
-    }
+    return safeFormat(results.get(0).getAfter().printAll());
   }
 
   @PostMapping("/convertProject")
@@ -86,15 +83,9 @@ public class RewriterController {
       List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
       for (Result result : results) {
         System.out.println("Rewriting " + result.getAfter().getSourcePath());
-
-        String content = result.getAfter().printAll();
-        try {
-          content = new Formatter().formatSource(content);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-
-        Files.writeString(tempFolder.resolve(result.getAfter().getSourcePath()), content);
+        Files.writeString(
+            tempFolder.resolve(result.getAfter().getSourcePath()),
+            safeFormat(result.getAfter().printAll()));
       }
 
       Path tempFolderZip = Files.createTempDirectory("beam-rewriter");
@@ -125,16 +116,20 @@ public class RewriterController {
           cookbookConfig.getParser().parse(List.of(workingFile), tempFolder, ctx);
       List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
 
-      String content = results.get(0).getAfter().printAll();
-      try {
-        content = new Formatter().formatSource(content);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
-          .body(content.getBytes(StandardCharsets.UTF_8));
+          .body(safeFormat(results.get(0).getAfter().printAll()).getBytes(StandardCharsets.UTF_8));
     }
+  }
+
+  private String safeFormat(String content) {
+    try {
+      content =
+          new Formatter(JavaFormatterOptions.builder().formatJavadoc(true).build())
+              .formatSourceAndFixImports(content);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return content;
   }
 }

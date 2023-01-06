@@ -1,6 +1,7 @@
 package org.apache.beam.rewriter.common;
 
 import java.util.function.Supplier;
+import org.apache.beam.rewriter.beam.BeamCleanupCookbook;
 import org.apache.beam.rewriter.flink.FlinkMigrationCookbook;
 import org.apache.beam.rewriter.spark.SparkMigrationCookbook;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +24,9 @@ public final class CookbookFactory {
       case FLINK:
         return new CookbookConfig(
             "Beam to Flink", new FlinkMigrationCookbook(), buildParser(cookbook).build());
+      case BEAM:
+        return new CookbookConfig(
+            "Beam", new BeamCleanupCookbook(), buildParser(cookbook).build());
       default:
         throw new IllegalArgumentException("Invalid cookbook: " + cookbook);
     }
@@ -35,6 +39,9 @@ public final class CookbookFactory {
       case FLINK:
         return JavaParser.fromJavaVersion()
             .classpath("beam-sdks-java-core", "flink-streaming", "flink-core", "scala");
+      case BEAM:
+        return JavaParser.fromJavaVersion()
+            .classpath("beam-sdks-java-core");
       default:
         throw new IllegalArgumentException("Invalid cookbook for parser: " + cookbook);
     }
@@ -45,6 +52,6 @@ public final class CookbookFactory {
   }
 
   public static JavaParser.Builder<? extends JavaParser, ?> beamBuilder() {
-    return JavaParser.fromJavaVersion().classpath("beam-sdks-java-core");
+    return buildParser(CookbookEnum.BEAM);
   }
 }
