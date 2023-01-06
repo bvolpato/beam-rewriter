@@ -47,6 +47,13 @@ dependencies {
     implementation("net.lingala.zip4j:zip4j:2.11.2")
     implementation("com.google.googlejavaformat:google-java-format:$googleJavaFormatVersion")
 
+    // Logging
+    testImplementation("ch.qos.logback:logback-core:1.4.5")
+    testImplementation("ch.qos.logback:logback-classic:1.4.5")
+    testImplementation("org.slf4j:slf4j-api:2.0.6")
+
+    // Run Beam example
+    implementation("org.apache.beam:beam-runners-direct-java")
 }
 
 configurations {

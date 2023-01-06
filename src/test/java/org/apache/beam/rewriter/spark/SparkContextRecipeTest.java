@@ -8,16 +8,18 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
-class SparkContextTextFileToBeamTextIORecipeTest implements RewriteTest {
+class SparkContextRecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-    spec.recipe(new SparkContextTextFileToBeamTextIORecipe())
+
+    spec.recipe(new SparkContextRecipe())
         .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
+
   }
 
   @Test
-  void testRewriteTextFile() {
+  void testRewriteSparkContext() {
     rewriteRun(java("""
           import org.apache.spark.api.java.JavaRDD;
           import org.apache.spark.api.java.JavaSparkContext;
@@ -28,13 +30,12 @@ class SparkContextTextFileToBeamTextIORecipeTest implements RewriteTest {
               }
           }
         """, """
-         import org.apache.beam.sdk.io.TextIO;
+         import org.apache.beam.sdk.Pipeline;
          import org.apache.spark.api.java.JavaRDD;
-         import org.apache.spark.api.java.JavaSparkContext;
-
+          
          class Convert {
-             public void run(JavaSparkContext sparkContext) {
-                 JavaRDD<String> rdd = sparkContext.apply("ReadTextFile", TextIO.read().from("gs://beam-samples/shakespeare.txt"));
+             public void run(Pipeline pipeline) {
+                 JavaRDD<String> rdd = pipeline.textFile("gs://beam-samples/shakespeare.txt");
              }
          }
         """));

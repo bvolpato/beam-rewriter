@@ -4,6 +4,7 @@ import com.google.googlejavaformat.java.Formatter;
 import com.google.googlejavaformat.java.FormatterException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -124,9 +125,16 @@ public class RewriterController {
           cookbookConfig.getParser().parse(List.of(workingFile), tempFolder, ctx);
       List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
 
+      String content = results.get(0).getAfter().printAll();
+      try {
+        content = new Formatter().formatSource(content);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
-          .body(results.get(0).getAfter().printAllAsBytes());
+          .body(content.getBytes(StandardCharsets.UTF_8));
     }
   }
 }

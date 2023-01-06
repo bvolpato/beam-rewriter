@@ -8,36 +8,34 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
-class SparkContextToPipelineRecipeTest implements RewriteTest {
+class JavaRDDSaveAsTextFileRecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-
-    spec.recipe(new SparkContextToPipelineRecipe())
+    spec.recipe(new JavaRDDSaveAsTextFileRecipe())
         .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
-
   }
 
   @Test
-  void testRewriteSparkContext() {
+  void testRewriteTextFile() {
     rewriteRun(java("""
           import org.apache.spark.api.java.JavaRDD;
-          import org.apache.spark.api.java.JavaSparkContext;
           
           class Convert {
-              public void run(JavaSparkContext sparkContext) {
-                  JavaRDD<String> rdd = sparkContext.textFile("gs://beam-samples/shakespeare.txt");
+              public void run(JavaRDD<String> rdd) {
+                  rdd.saveAsTextFile("/tmp/shakespeare.txt");
               }
           }
         """, """
-         import org.apache.beam.sdk.Pipeline;
+         import org.apache.beam.sdk.io.TextIO;
          import org.apache.spark.api.java.JavaRDD;
-          
+
          class Convert {
-             public void run(Pipeline pipeline) {
-                 JavaRDD<String> rdd = pipeline.textFile("gs://beam-samples/shakespeare.txt");
+             public void run(JavaRDD<String> rdd) {
+                 rdd.apply("WriteTextFile", TextIO.write().to("/tmp/shakespeare.txt"));
              }
          }
         """));
   }
+
 }

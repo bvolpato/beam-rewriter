@@ -1,7 +1,8 @@
 package org.apache.beam.rewriter.spark;
 
+import org.apache.beam.rewriter.beam.AddMissingPipelineRunRecipe;
+import org.apache.beam.rewriter.beam.BeamCleanupCookbook;
 import org.openrewrite.Recipe;
-import org.openrewrite.java.format.AutoFormat;
 
 public class SparkMigrationCookbook extends Recipe {
 
@@ -11,13 +12,17 @@ public class SparkMigrationCookbook extends Recipe {
     doNext(new JavaRDDReduceByKeyRecipe());
     doNext(new JavaRDDMapRecipe());
     doNext(new JavaRDDMapToPairRecipe());
-    doNext(new TupleToKVRecipe());
-    doNext(new JavaRDDtoPCollectionRecipe());
-    doNext(new JavaPairRDDtoPCollectionRecipe());
-    doNext(new SparkContextTextFileToBeamTextIORecipe());
-    doNext(new SparkConfToPipelineOptionsRecipe());
-    doNext(new SparkContextToPipelineRecipe());
-    doNext(new AutoFormat());
+    doNext(new JavaRDDFlatMapRecipe());
+    doNext(new JavaRDDSaveAsTextFileRecipe());
+    doNext(new Tuple2Recipe());
+    doNext(new JavaRDDRecipe());
+    doNext(new JavaPairRDDRecipe());
+    doNext(new SparkContextTextFileRecipe());
+    doNext(new SparkConfRecipe());
+    doNext(new SparkContextRecipe());
+
+    doNext(new AddMissingPipelineRunRecipe());
+    doNext(new BeamCleanupCookbook());
   }
 
   @Override

@@ -11,7 +11,7 @@ import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
-public class JavaRDDtoPCollectionRecipe extends Recipe {
+public class JavaRDDRecipe extends Recipe {
 
   @Override
   public String getDisplayName() {

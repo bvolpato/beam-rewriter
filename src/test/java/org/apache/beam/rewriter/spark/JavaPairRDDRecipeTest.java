@@ -8,33 +8,34 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
-class JavaRDDtoPCollectionRecipeTest implements RewriteTest {
+class JavaPairRDDRecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-    spec.recipe(new JavaRDDtoPCollectionRecipe())
+    spec.recipe(new JavaPairRDDRecipe())
         .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
   }
 
   @Test
-  void testRewriteRDD() {
+  void testRewritePairToPCollection() {
     rewriteRun(
         java(
             """
-                  import org.apache.spark.api.java.JavaRDD;
+                  import org.apache.spark.api.java.JavaPairRDD;
                   
                   class Convert {
-                    public void run(JavaRDD<String> rdd) {
-                      JavaRDD<String> filtered = rdd;
+                    public void run(JavaPairRDD<String, Integer> rdd) {
+                      JavaPairRDD<String, Integer> filtered = rdd;
                     }
                   }
                 """,
             """
+                import org.apache.beam.sdk.values.KV;
                 import org.apache.beam.sdk.values.PCollection;
                                                                        
                 class Convert {
-                  public void run(PCollection<String> rdd) {
-                    PCollection<String> filtered = rdd;
+                  public void run(PCollection<KV<String,Integer>> rdd) {
+                    PCollection<KV<String,Integer>> filtered = rdd;
                   }
                 }
                 """

@@ -3,6 +3,7 @@ package org.apache.beam.rewriter.common;
 import java.util.function.Supplier;
 import org.apache.beam.rewriter.flink.FlinkMigrationCookbook;
 import org.apache.beam.rewriter.spark.SparkMigrationCookbook;
+import org.jetbrains.annotations.NotNull;
 import org.openrewrite.java.JavaParser;
 
 /** Factory class for Beam Rewriter instances. */
@@ -27,7 +28,7 @@ public final class CookbookFactory {
     }
   }
 
-  public static JavaParser.Builder buildParser(CookbookEnum cookbook) {
+  public static JavaParser.Builder<? extends JavaParser, ?> buildParser(CookbookEnum cookbook) {
     switch (cookbook) {
       case SPARK:
         return JavaParser.fromJavaVersion().classpath("beam-sdks-java-core", "spark", "scala");
@@ -40,6 +41,10 @@ public final class CookbookFactory {
   }
 
   public static Supplier<JavaParser> beamParser() {
-    return () -> JavaParser.fromJavaVersion().classpath("beam-sdks-java-core").build();
+    return () -> beamBuilder().build();
+  }
+
+  public static JavaParser.Builder<? extends JavaParser, ?> beamBuilder() {
+    return JavaParser.fromJavaVersion().classpath("beam-sdks-java-core");
   }
 }

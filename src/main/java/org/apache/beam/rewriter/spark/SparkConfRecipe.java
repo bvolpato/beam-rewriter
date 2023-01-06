@@ -15,7 +15,7 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.J.VariableDeclarations.NamedVariable;
 import org.openrewrite.java.tree.JavaType;
 
-public class SparkConfToPipelineOptionsRecipe extends Recipe {
+public class SparkConfRecipe extends Recipe {
 
   @Override
   public String getDisplayName() {

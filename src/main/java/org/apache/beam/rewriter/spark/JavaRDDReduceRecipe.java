@@ -3,6 +3,7 @@ package org.apache.beam.rewriter.spark;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
+import org.apache.beam.rewriter.common.CookbookFactory;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -64,11 +65,7 @@ public class JavaRDDReduceRecipe extends Recipe {
                             "#{any(PCollection)}.apply(\"CombineGlobally\", Combine.globally(#{any(SerializableFunction)}))")
                         .imports("org.apache.beam.sdk.transforms.Combine")
                         .imports("org.apache.beam.sdk.transforms.SerializableFunction")
-                        .javaParser(
-                            () ->
-                                JavaParser.fromJavaVersion()
-                                    .classpath("beam-sdks-java-core")
-                                    .build())
+                        .javaParser(CookbookFactory.beamParser())
                         .build(),
                     method.getCoordinates().replaceMethod(),
                     method.getSelect(),

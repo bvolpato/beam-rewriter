@@ -34,6 +34,6 @@ public class WordCounter {
     JavaPairRDD<String, Integer> countData =
         wordsFromFile.mapToPair(t -> new Tuple2<>(t, 1)).reduceByKey((x, y) -> x + y);
 
-    countData.saveAsTextFile("target/CountData/" + UUID.randomUUID());
+    countData.map(t2 -> t2._1 + "," + t2._2).saveAsTextFile("target/CountData/" + UUID.randomUUID());
   }
 }

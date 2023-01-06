@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
-class SparkConfToPipelineOptionsRecipeTest implements RewriteTest {
+class SparkConfRecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-    spec.recipe(new SparkConfToPipelineOptionsRecipe())
+    spec.recipe(new SparkConfRecipe())
         .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
   }
 

@@ -8,35 +8,35 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
-class TupleToKVRecipeTest implements RewriteTest {
+class JavaRDDRecipeTest implements RewriteTest {
 
   @Override
   public void defaults(RecipeSpec spec) {
-    spec.recipe(new TupleToKVRecipe())
+    spec.recipe(new JavaRDDRecipe())
         .parser(CookbookFactory.buildParser(CookbookEnum.SPARK));
   }
 
   @Test
-  void testRewriteTupleToKV() {
+  void testRewriteRDD() {
     rewriteRun(
         java(
             """
-                  import scala.Tuple2;
+                  import org.apache.spark.api.java.JavaRDD;
                   
                   class Convert {
-                    public void run() {
-                      Tuple2<String, Integer> maps = new Tuple2<>("a", 1);
+                    public void run(JavaRDD<String> rdd) {
+                      JavaRDD<String> filtered = rdd;
                     }
                   }
                 """,
             """
-                  import org.apache.beam.sdk.values.KV;
-                  
-                  class Convert {
-                    public void run() {
-                      KV<String, Integer> maps = KV.of("a", 1);
-                    }
+                import org.apache.beam.sdk.values.PCollection;
+                                                                       
+                class Convert {
+                  public void run(PCollection<String> rdd) {
+                    PCollection<String> filtered = rdd;
                   }
+                }
                 """
         )
     );

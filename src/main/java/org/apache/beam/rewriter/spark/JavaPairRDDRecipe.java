@@ -28,7 +28,7 @@ import org.openrewrite.java.tree.Space;
 import org.openrewrite.java.tree.TypeTree;
 import org.openrewrite.marker.Markers;
 
-public class JavaPairRDDtoPCollectionRecipe extends Recipe {
+public class JavaPairRDDRecipe extends Recipe {
 
   @Override
   public String getDisplayName() {

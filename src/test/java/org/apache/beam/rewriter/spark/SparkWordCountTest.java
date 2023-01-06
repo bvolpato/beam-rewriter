@@ -44,7 +44,6 @@ class SparkWordCountTest implements RewriteTest {
          import org.apache.beam.sdk.transforms.MapElements;
          import org.apache.beam.sdk.values.KV;
          import org.apache.beam.sdk.values.PCollection;
-         import org.apache.beam.sdk.values.TypeDescriptor;
          import org.apache.beam.sdk.values.TypeDescriptors;
 
          class Convert {
@@ -55,7 +54,7 @@ class SparkWordCountTest implements RewriteTest {
                          .apply("Map", MapElements.into(TypeDescriptors.strings()).via(word -> word.toUpperCase()))
                          .apply("Filter", Filter.by(word -> word.length() > 1));
                          
-                 PCollection<KV<String, Integer>> pairRDD = filtered.apply("MapToPair", MapElements.into(TypeDescriptors.kvs(TypeDescriptor.of(String.class), TypeDescriptor.of(Integer.class))).via(word -> KV.of(word, 1)));
+                 PCollection<KV<String, Integer>> pairRDD = filtered.apply("MapToPair", MapElements.into(TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.integers())).via(word -> KV.of(word, 1)));
              }
          }
         """));
@@ -98,7 +97,7 @@ class SparkWordCountTest implements RewriteTest {
             JavaPairRDD<String, Integer> countData = wordsFromFile.mapToPair(t -> new Tuple2<>(t, 1))
                 .reduceByKey((x, y) -> x + y);
                 
-            countData.saveAsTextFile("target/CountData/" + UUID.randomUUID());
+            countData.map(t2 -> t2._1 + "," + t2._2).saveAsTextFile("target/CountData/" + UUID.randomUUID());
           }
         }
         """, """
@@ -113,10 +112,10 @@ class SparkWordCountTest implements RewriteTest {
         import org.apache.beam.sdk.options.PipelineOptionsFactory;
         import org.apache.beam.sdk.transforms.Combine;
         import org.apache.beam.sdk.transforms.Filter;
+        import org.apache.beam.sdk.transforms.FlatMapElements;
         import org.apache.beam.sdk.transforms.MapElements;
         import org.apache.beam.sdk.values.KV;
         import org.apache.beam.sdk.values.PCollection;
-        import org.apache.beam.sdk.values.TypeDescriptor;
         import org.apache.beam.sdk.values.TypeDescriptors;
         
         public class WordCounter {
@@ -132,14 +131,15 @@ class SparkWordCountTest implements RewriteTest {
                 PCollection<String> inputFile = pipeline.apply("ReadTextFile", TextIO.read().from(FILE_NAME));
                 
                 PCollection<String> wordsFromFile = inputFile
-                        .flatMap(content -> Arrays.stream(content.split(" ")).iterator())
+                        .apply("FlatMap", FlatMapElements.into(TypeDescriptors.strings()).via(content -> Arrays.asList(content.split(" "))))
                         .apply("Map", MapElements.into(TypeDescriptors.strings()).via(word -> word.replaceAll("[^a-zA-Z0-9]", "")))
                         .apply("Filter", Filter.by(word -> word.length() > 1));
                 
-                PCollection<KV<String, Integer>> countData = wordsFromFile.apply("MapToPair", MapElements.into(TypeDescriptors.kvs(TypeDescriptor.of(String.class), TypeDescriptor.of(Integer.class))).via(t -> KV.of(t, 1)))
+                PCollection<KV<String, Integer>> countData = wordsFromFile.apply("MapToPair", MapElements.into(TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.integers())).via(t -> KV.of(t, 1)))
                         .apply("CombinePerKey", Combine.perKey((x, y) -> x + y));
                 
-                countData.saveAsTextFile("target/CountData/" + UUID.randomUUID());
+                countData.apply("Map", MapElements.into(TypeDescriptors.strings()).via(t2 -> t2.getKey() + "," + t2.getValue())).apply("WriteTextFile", TextIO.write().to("target/CountData/" + UUID.randomUUID()));
+                pipeline.run();
             }
         }
         """));

@@ -14,11 +14,11 @@ import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
-public class JavaRDDFilterRecipe extends Recipe {
+public class JavaRDDSaveAsTextFileRecipe extends Recipe {
 
   @Override
   public String getDisplayName() {
-    return "Replaces JavaRDD Filter with a Filter transform";
+    return "Replaces JavaRDD `saveAsTextFile` with a TextIO transform";
   }
 
   @Override
@@ -38,7 +38,7 @@ public class JavaRDDFilterRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.JavaRDD");
+    return new UsesType<>("org.apache.spark.api.java.JavaRDDLike");
   }
 
   @Override
@@ -50,33 +50,26 @@ public class JavaRDDFilterRecipe extends Recipe {
 
     final MethodMatcher filterMatcher =
         new MethodMatcher(
-            "org.apache.spark.api.java.JavaRDD filter(org.apache.spark.api.java.function.Function)",
-            false);
+            "org.apache.spark.api.java.JavaRDDLike saveAsTextFile(..)", true);
 
     @Override
     public J.MethodInvocation visitMethodInvocation(
         J.MethodInvocation method, ExecutionContext executionContext) {
       if (filterMatcher.matches(method)) {
-        System.out.println("Method1: " + method.getMethodType());
-
         J.MethodInvocation mi =
             method
                 .withName(method.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
-                            "#{any(PCollection)}.apply(\"Filter\", Filter.by(#{any(SerializableFunction)}))")
-                        .imports("org.apache.beam.sdk.transforms.Filter")
-                        .imports("org.apache.beam.sdk.transforms.SerializableFunction")
+                            "#{any(Pipeline)}.apply(\"WriteTextFile\", TextIO.write().to(#{any()}))")
+                        .imports("org.apache.beam.sdk.io.TextIO")
                         .javaParser(CookbookFactory.beamParser())
                         .build(),
                     method.getCoordinates().replaceMethod(),
                     method.getSelect(),
                     method.getArguments().get(0));
-
-        System.out.println("Method2: " + mi.getMethodType());
-
-        maybeAddImport("org.apache.beam.sdk.transforms.Filter");
+        maybeAddImport("org.apache.beam.sdk.io.TextIO");
         return mi;
       } else {
         return super.visitMethodInvocation(method, executionContext);

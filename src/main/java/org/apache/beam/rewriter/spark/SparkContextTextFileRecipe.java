@@ -3,6 +3,7 @@ package org.apache.beam.rewriter.spark;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
+import org.apache.beam.rewriter.common.CookbookFactory;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -13,7 +14,7 @@ import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
-public class SparkContextTextFileToBeamTextIORecipe extends Recipe {
+public class SparkContextTextFileRecipe extends Recipe {
 
   @Override
   public String getDisplayName() {
@@ -63,11 +64,7 @@ public class SparkContextTextFileToBeamTextIORecipe extends Recipe {
                             this::getCursor,
                             "#{any(Pipeline)}.apply(\"ReadTextFile\", TextIO.read().from(#{any(java.lang.String)}))")
                         .imports("org.apache.beam.sdk.io.TextIO")
-                        .javaParser(
-                            () ->
-                                JavaParser.fromJavaVersion()
-                                    .classpath("beam-sdks-java-core")
-                                    .build())
+                        .javaParser(CookbookFactory.beamParser())
                         .build(),
                     method.getCoordinates().replaceMethod(),
                     method.getSelect(),
