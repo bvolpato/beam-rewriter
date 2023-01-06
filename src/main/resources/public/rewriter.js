@@ -5,10 +5,10 @@ editor.setTheme("ace/theme/xcode");
 editor.session.setMode("ace/mode/java");
 
 function loaderOn() {
-  document.getElementById("loader").classList.add("loader");
+  document.getElementById("loader").style.display = "block";
 }
 function loaderOff() {
-  document.getElementById("loader").classList.remove("loader");
+  document.getElementById("loader").style.display = "none";
 }
 
 function runCookbook() {

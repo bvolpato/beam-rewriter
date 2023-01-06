@@ -8,6 +8,7 @@ public class SparkMigrationCookbook extends Recipe {
 
   public SparkMigrationCookbook() {
     doNext(new JavaRDDFilterRecipe());
+    doNext(new JavaRDDForEachRecipe());
     doNext(new JavaRDDReduceRecipe());
     doNext(new JavaRDDReduceByKeyRecipe());
     doNext(new JavaRDDMapRecipe());
@@ -17,6 +18,7 @@ public class SparkMigrationCookbook extends Recipe {
     doNext(new Tuple2Recipe());
     doNext(new JavaRDDRecipe());
     doNext(new JavaPairRDDRecipe());
+    doNext(new FunctionRecipe());
     doNext(new SparkContextTextFileRecipe());
     doNext(new SparkConfRecipe());
     doNext(new SparkContextRecipe());

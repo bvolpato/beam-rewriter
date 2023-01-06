@@ -54,6 +54,11 @@ dependencies {
 
     // Run Beam example
     implementation("org.apache.beam:beam-runners-direct-java")
+    implementation("org.apache.beam:beam-runners-google-cloud-dataflow-java")
+
+    // Prevent conflicts
+    implementation("io.github.classgraph:classgraph:4.8.152")
+
 }
 
 configurations {

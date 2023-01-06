@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.lingala.zip4j.ZipFile;
 import org.apache.beam.rewriter.common.CookbookConfig;
@@ -36,7 +37,8 @@ public class RewriterController {
   }
 
   @PostMapping("/convert")
-  public String convert(String cookbook, String code) throws IOException, FormatterException {
+  public String convert(String cookbook, String code)
+      throws IOException, FormatterException, InterruptedException {
 
     CookbookConfig cookbookConfig = CookbookFactory.buildCookbook(CookbookEnum.get(cookbook));
     ExecutionContext ctx = new InMemoryExecutionContext(Throwable::printStackTrace);
@@ -52,13 +54,16 @@ public class RewriterController {
       return code;
     }
 
+    // Keeping it to show effect :D
+    TimeUnit.SECONDS.sleep(1L);
+
     return safeFormat(results.get(0).getAfter().printAll());
   }
 
   @PostMapping("/convertProject")
   public ResponseEntity<byte[]> convertProject(
       @RequestPart("cookbook") String cookbook, @RequestPart("file") MultipartFile file)
-      throws IOException, FormatterException {
+      throws IOException, FormatterException, InterruptedException {
 
     String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
     CookbookConfig cookbookConfig = CookbookFactory.buildCookbook(CookbookEnum.get(cookbook));
@@ -116,6 +121,9 @@ public class RewriterController {
           cookbookConfig.getParser().parse(List.of(workingFile), tempFolder, ctx);
       List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
 
+      // Keeping it to show effect :D
+      TimeUnit.SECONDS.sleep(1L);
+
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
           .body(safeFormat(results.get(0).getAfter().printAll()).getBytes(StandardCharsets.UTF_8));
@@ -123,6 +131,11 @@ public class RewriterController {
   }
 
   private String safeFormat(String content) {
+    // TODO: This is going to be replaced by VoidFunction (non existing today in Beam)
+    content =
+        content.replace(
+            "-> System.out.println(line)));", "-> { System.out.println(line); return null; }));");
+
     try {
       content =
           new Formatter(JavaFormatterOptions.builder().formatJavadoc(true).build())
@@ -130,6 +143,8 @@ public class RewriterController {
     } catch (Exception e) {
       e.printStackTrace();
     }
+
+
     return content;
   }
 }

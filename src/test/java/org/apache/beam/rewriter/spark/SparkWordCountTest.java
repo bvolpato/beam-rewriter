@@ -75,7 +75,7 @@ class SparkWordCountTest implements RewriteTest {
                 
         public class WordCounter {
                 
-          private static final String FILE_NAME = "samples/shakespeare.txt";
+          private static final String FILE_NAME = "gs://dataflow-samples/shakespeare/kinglear.txt";
                 
           public static void main(String[] args) {
                 
@@ -96,8 +96,11 @@ class SparkWordCountTest implements RewriteTest {
                 
             JavaPairRDD<String, Integer> countData = wordsFromFile.mapToPair(t -> new Tuple2<>(t, 1))
                 .reduceByKey((x, y) -> x + y);
-                
-            countData.map(t2 -> t2._1 + "," + t2._2).saveAsTextFile("target/CountData/" + UUID.randomUUID());
+            
+            JavaRDD<String> result = countData.map(t2 -> t2._1 + "," + t2._2);
+            result.foreach(line -> System.out.println(line));
+        
+            result.saveAsTextFile("target/CountData/" + UUID.randomUUID());
           }
         }
         """, """
@@ -120,7 +123,7 @@ class SparkWordCountTest implements RewriteTest {
         
         public class WordCounter {
                 
-            private static final String FILE_NAME = "samples/shakespeare.txt";
+            private static final String FILE_NAME = "gs://dataflow-samples/shakespeare/kinglear.txt";
                 
             public static void main(String[] args) {
                 
@@ -138,7 +141,13 @@ class SparkWordCountTest implements RewriteTest {
                 PCollection<KV<String, Integer>> countData = wordsFromFile.apply("MapToPair", MapElements.into(TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.integers())).via(t -> KV.of(t, 1)))
                         .apply("CombinePerKey", Combine.perKey((x, y) -> x + y));
                 
-                countData.apply("Map", MapElements.into(TypeDescriptors.strings()).via(t2 -> t2.getKey() + "," + t2.getValue())).apply("WriteTextFile", TextIO.write().to("target/CountData/" + UUID.randomUUID()));
+                PCollection<String> result = countData.apply("Map", MapElements.into(TypeDescriptors.strings()).via(t2 -> t2.getKey() + "," + t2.getValue()));
+                result.apply("ForEach", MapElements.into(TypeDescriptors.voids()).via(line -> {
+                    System.out.println(line);
+                    return null;
+                }));
+            
+                result.apply("WriteTextFile", TextIO.write().to("target/CountData/" + UUID.randomUUID()));
                 pipeline.run();
             }
         }

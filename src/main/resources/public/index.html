@@ -91,7 +91,7 @@
     <h1>Try Beam Cookbooks</h1>
     <p>Beam Cookbooks is an interactive environment to convert data processing workloads to Beam
       without having to install Apache Beam in your environment. After rewriting, you can try the
-      Apache Beam code at <a href=https://play.beam.apache.org/>Beam
+      Apache Beam code at <a href=https://play.beam.apache.org/ target="_blank">Beam
         Playground
         (Beta)</a>.</p><br><br><a class=playground__mobile href=https://play.beam.apache.org/><img
       alt="beam playground" src=https://beam.apache.org/images/playground.png></a>
@@ -101,7 +101,7 @@
         <label for="cookbook"><strong>Cookbook:</strong></label>
         <select class="cookbookChoice" id="cookbook" name="cookbook">
           <option value="spark">Spark to Beam</option>
-          <option value="flink">Flink to Flink</option>
+          <option value="flink">Flink to Beam</option>
           <option value="beam">Icing on my Beam pipeline</option>
         </select>
         <button class="convertButton" onclick="runCookbook()">▶︎ Cook!</button>
@@ -109,27 +109,26 @@
 
 
       <div class="rewriterBarRight">
-        or upload your code!
+        or upload your project!
         <input id="project" name="file" onchange="convertProject()" type="file"/>
 
       </div>
 
-      <div id="loader" ></div>
+      <img id="loader" class="loader" style="display: none;" src="cooking.gif" height="250"/>
 
       <div class="rewriterSnippet playground">
-        <div class="rewriterCode" id="editor">package com.company.spark;
-
-import java.util.Arrays;
+        <div class="rewriterCode" id="editor">import java.util.Arrays;
 import java.util.UUID;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function2;
 import scala.Tuple2;
 
 public class WordCounter {
 
-  private static final String FILE_NAME = "samples/shakespeare.txt";
+  private static final String FILE_NAME = "gs://dataflow-samples/shakespeare/kinglear.txt";
 
   public static void main(String[] args) {
 
@@ -151,9 +150,19 @@ public class WordCounter {
             .filter(word -&gt; word.length() &gt; 1);
 
     JavaPairRDD&lt;String, Integer&gt; countData =
-        wordsFromFile.mapToPair(t -&gt; new Tuple2&lt;&gt;(t, 1)).reduceByKey((x, y) -&gt; x + y);
+        wordsFromFile.mapToPair(t -&gt; new Tuple2&lt;&gt;(t, 1)).reduceByKey(new SumFunction());
 
-    countData.map(t2 -&gt; t2._1 + "," + t2._2).saveAsTextFile("target/CountData/" + UUID.randomUUID());
+    JavaRDD&lt;String&gt; result = countData.map(t2 -&gt; t2._1 + "," + t2._2);
+    result.foreach(line -&gt; System.out.println(line));
+
+    result.saveAsTextFile("target/CountData/" + UUID.randomUUID());
+  }
+
+  static class SumFunction implements Function2&lt;Integer, Integer, Integer&gt; {
+    @Override
+    public Integer call(Integer v1, Integer v2) throws Exception {
+      return v1 + v2;
+    }
   }
 }
 

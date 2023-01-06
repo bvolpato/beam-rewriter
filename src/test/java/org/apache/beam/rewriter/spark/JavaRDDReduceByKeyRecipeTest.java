@@ -17,7 +17,7 @@ class JavaRDDReduceByKeyRecipeTest implements RewriteTest {
   }
 
   @Test
-  void testRewriteFilter() {
+  void testRewriteInline() {
     rewriteRun(
         java(
             """
@@ -45,4 +45,48 @@ class JavaRDDReduceByKeyRecipeTest implements RewriteTest {
     );
   }
 
+  @Test
+  void testRewriteFunction() {
+    rewriteRun(
+        java(
+            """
+                  import org.apache.spark.api.java.JavaPairRDD;
+                  import org.apache.spark.api.java.function.Function2;
+                  
+                  class Convert {
+                    public void run(JavaPairRDD<String, Integer> rdd) {
+                      JavaPairRDD<String, Integer> combined = rdd
+                        .reduceByKey(new SumFunction());
+                    }
+
+                    static class SumFunction implements Function2<Integer, Integer, Integer> {
+                      @Override
+                      public Integer call(Integer v1, Integer v2) throws Exception {
+                        return v1 + v2;
+                      }
+                    }
+                  }
+                """,
+            """
+                  import org.apache.beam.sdk.transforms.Combine;
+                  import org.apache.spark.api.java.JavaPairRDD;
+                  import org.apache.spark.api.java.function.Function2;
+                  
+                  class Convert {
+                    public void run(JavaPairRDD<String, Integer> rdd) {
+                      JavaPairRDD<String, Integer> combined = rdd
+                        .apply("CombinePerKey", Combine.perKey(new SumFunction()));
+                    }
+
+                    static class SumFunction implements Function2<Integer, Integer, Integer> {
+                      @Override
+                      public Integer call(Integer v1, Integer v2) throws Exception {
+                        return v1 + v2;
+                      }
+                    }
+                  }
+                """
+        )
+    );
 }
+  }

@@ -8,13 +8,13 @@ import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.JavaTemplate;
+import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
-public class JavaRDDFilterRecipe extends Recipe {
+public class JavaRDDUnionRecipe extends Recipe {
 
   @Override
   public String getDisplayName() {
@@ -42,46 +42,47 @@ public class JavaRDDFilterRecipe extends Recipe {
   }
 
   @Override
-  public JavaIsoVisitor<ExecutionContext> getVisitor() {
+  public JavaVisitor<ExecutionContext> getVisitor() {
     return new Visitor();
   }
 
-  static class Visitor extends JavaIsoVisitor<ExecutionContext> {
+  static class Visitor extends JavaVisitor<ExecutionContext> {
 
     final MethodMatcher filterMatcher =
         new MethodMatcher(
-            "org.apache.spark.api.java.JavaRDD filter(org.apache.spark.api.java.function.Function)",
+            "org.apache.spark.api.java.JavaRDD union(org.apache.spark.api.java.JavaRDD)",
             false);
 
     @Override
-    public J.MethodInvocation visitMethodInvocation(
-        J.MethodInvocation methodZ, ExecutionContext executionContext) {
-      J.MethodInvocation mi = super.visitMethodInvocation(methodZ, executionContext);
+    public J visitMethodInvocation(
+        J.MethodInvocation method, ExecutionContext executionContext) {
+      if (filterMatcher.matches(method)) {
+        System.out.println("Method1: " + method.getMethodType());
 
-      if (filterMatcher.matches(mi)) {
-        System.out.println("Method1: " + mi.getMethodType());
-
-        mi =
-            mi
-                .withName(mi.getName().withSimpleName("apply"))
+        J mi =
+            method
+                .withName(method.getName().withSimpleName("of"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
-                            "#{any(PCollection)}.apply(\"Filter\", Filter.by(#{any(SerializableFunction)}))")
-                        .imports("org.apache.beam.sdk.transforms.Filter")
-                        .imports("org.apache.beam.sdk.transforms.SerializableFunction")
+                            "PCollectionList.of(#{any(PCollection)}).and(#{any(PCollection)}).apply(\"Flatten\", Flatten.pCollections()))")
+                        .imports("org.apache.beam.sdk.transforms.Flatten")
+                        .imports("org.apache.beam.sdk.values.PCollection")
+                        .imports("org.apache.beam.sdk.values.PCollectionList")
                         .javaParser(CookbookFactory.beamParser())
                         .build(),
-                    mi.getCoordinates().replaceMethod(),
-                    mi.getSelect(),
-                    mi.getArguments().get(0));
+                    method.getCoordinates().replace(),
+                    method.getSelect(),
+                    method.getArguments().get(0));
 
-        System.out.println("Method2: " + mi.getMethodType());
+        System.out.println("Method2: " + mi);
 
-        maybeAddImport("org.apache.beam.sdk.transforms.Filter");
+        maybeAddImport("org.apache.beam.sdk.transforms.Flatten");
+        maybeAddImport("org.apache.beam.sdk.values.PCollection");
+        maybeAddImport("org.apache.beam.sdk.values.PCollectionList");
         return mi;
       } else {
-        return mi;
+        return super.visitMethodInvocation(method, executionContext);
       }
     }
   }

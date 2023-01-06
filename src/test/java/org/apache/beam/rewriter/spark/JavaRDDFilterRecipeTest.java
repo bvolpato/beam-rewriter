@@ -45,4 +45,35 @@ class JavaRDDFilterRecipeTest implements RewriteTest {
     );
   }
 
+
+  @Test
+  void testRewriteMultipleFilters() {
+    rewriteRun(
+        java(
+            """
+                  import org.apache.spark.api.java.JavaRDD;
+                  
+                  class Convert {
+                    public void run(JavaRDD<String> rdd) {
+                      JavaRDD<String> filtered = rdd
+                        .filter(word -> word.length() > 1)
+                        .filter(word -> word.length() < 10);
+                    }
+                  }
+                """,
+            """
+                  import org.apache.beam.sdk.transforms.Filter;
+                  import org.apache.spark.api.java.JavaRDD;
+                  
+                  class Convert {
+                    public void run(JavaRDD<String> rdd) {
+                      JavaRDD<String> filtered = rdd
+                        .apply("Filter", Filter.by(word -> word.length() > 1))
+                        .apply("Filter", Filter.by(word -> word.length() < 10));
+                    }
+                  }
+                """
+        )
+    );
+  }
 }

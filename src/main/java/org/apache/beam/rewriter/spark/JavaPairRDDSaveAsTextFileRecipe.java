@@ -4,7 +4,9 @@ import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -70,69 +72,29 @@ public class JavaPairRDDSaveAsTextFileRecipe extends Recipe {
                 List.of(
                     rddClass.getTypeParameters().get(0), rddClass.getTypeParameters().get(1)));
 
-        J.MethodInvocation mi =
+        J result =
             method
                 .withName(method.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
-                            () -> getCursor().getParent().getParent(),
-                            "#{any(PCollection)}.apply(\"KVToString\", MapElements.into(TypeDescriptors.strings()).via(kv -> String.valueOf(kv)))")
+                            this::getCursor,
+                            "#{any(PCollection)}.apply(\"KVToString\", MapElements.into(TypeDescriptors.strings()).via(kv -> String.valueOf(kv))).apply(\"WriteTextFile\", TextIO.write().to(#{any()}))")
                         .imports("org.apache.beam.sdk.io.TextIO")
                         .imports("org.apache.beam.sdk.transforms.MapElements")
                         .imports("org.apache.beam.sdk.values.KV")
+                        .imports("org.apache.beam.sdk.values.PCollection")
                         .imports("org.apache.beam.sdk.values.TypeDescriptors")
                         .javaParser(CookbookFactory.beamParser())
                         .build(),
-                    method.getCoordinates().replaceMethod(),
-                    method.getSelect()
-                    );
-
-            mi.withName(method.getName().withSimpleName("apply"))
-                .withTemplate(
-                    JavaTemplate.builder(
-                            () -> getCursor().getParent().getParent(),
-                            "#{any(PCollection)}.apply(\"WriteTextFile\", TextIO.write().to(#{any()}))")
-                        .imports("org.apache.beam.sdk.io.TextIO")
-                        .imports("org.apache.beam.sdk.transforms.MapElements")
-                        .imports("org.apache.beam.sdk.values.KV")
-                        .imports("org.apache.beam.sdk.values.TypeDescriptors")
-                        .javaParser(CookbookFactory.beamParser())
-                        .build(),
-                    method.getCoordinates().after(),
+                    method.getCoordinates().replace(),
                     method.getSelect(),
                     method.getArguments().get(0));
-
-        //JavaType.Method methodType = mi.getMethodType();
-        //System.out.println("Method2: " + methodType);
-
-        // JavaType.Parameterized mapElementsType = (Parameterized) methodType.getParameterTypes().get(1);
-        // JavaType.Class targetPCollectionType = JavaType.ShallowClass.build("org.apache.beam.sdk.values.PCollection")
-        //     .withTypeParameters(List.of(JavaType.ShallowClass.build("java.lang.String")));
-        //
-        // mapElementsType.getTypeParameters().set(0, kvType);
-        // methodType = methodType.withReturnType(targetPCollectionType).withDeclaringType(targetPCollectionType);
-        //
-        // mi = mi.withDeclaringType(targetPCollectionType).withMethodType(methodType);
-        //
-        // mi = mi
-        //     .withMethodType(mi.getMethodType()
-        //         .withParameterTypes(List.of(JavaType.ShallowClass.build("java.lang.String"),
-        //             JavaType.ShallowClass.ShallowClass.build("org.apache.beam.sdk.transforms.MapElements")
-        //                 .withTypeParameters(List.of(kvType, JavaType.ShallowClass.build("java.lang.String"))))));
-        //
-        //         // .withDeclaringType(JavaType.ShallowClass.build("org.apache.beam.sdk.values.PCollection"))
-        //         // .withName("apply")
-        //         // .withReturnType(JavaType.ShallowClass.build("org.apache.beam.sdk.values.PCollection")))
-        // ;
-        //
-
-        // System.out.println("Method3: " + methodType);
 
         maybeAddImport("org.apache.beam.sdk.io.TextIO");
         maybeAddImport("org.apache.beam.sdk.transforms.MapElements");
         maybeAddImport("org.apache.beam.sdk.values.KV");
         maybeAddImport("org.apache.beam.sdk.values.TypeDescriptors");
-        return method;
+        return result;
       } else {
         return super.visitMethodInvocation(method, executionContext);
       }
