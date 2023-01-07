@@ -56,19 +56,20 @@ public class JavaRDDFlatMapRecipe extends Recipe {
     final AtomicBoolean insideFlat = new AtomicBoolean();
 
     @Override
-    public J visitMethodInvocation(J.MethodInvocation method, ExecutionContext executionContext) {
+    public J visitMethodInvocation(J.MethodInvocation methodZ, ExecutionContext executionContext) {
+      J.MethodInvocation mi = (J.MethodInvocation) super.visitMethodInvocation(methodZ, executionContext);
 
-      if (filterMatcher.matches(method)) {
-        Parameterized parameterized = (Parameterized) method.getArguments().get(0).getType();
+      if (filterMatcher.matches(mi)) {
+        Parameterized parameterized = (Parameterized) mi.getArguments().get(0).getType();
         JavaType.Class typeClass = (JavaType.Class) parameterized.getTypeParameters().get(1);
 
         String type = typeClass.getClassName();
 
         insideFlat.set(true);
 
-        J.MethodInvocation mi =
-            method
-                .withName(method.getName().withSimpleName("apply"))
+        mi =
+            mi
+                .withName(mi.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
@@ -80,9 +81,9 @@ public class JavaRDDFlatMapRecipe extends Recipe {
                         .imports("org.apache.beam.sdk.values.TypeDescriptor")
                         .javaParser(CookbookFactory.beamParser())
                         .build(),
-                    method.getCoordinates().replaceMethod(),
-                    method.getSelect(),
-                    visit(method.getArguments().get(0), executionContext));
+                    mi.getCoordinates().replaceMethod(),
+                    mi.getSelect(),
+                    visit(mi.getArguments().get(0), executionContext));
 
         insideFlat.set(false);
 
@@ -93,17 +94,17 @@ public class JavaRDDFlatMapRecipe extends Recipe {
       } else if (insideFlat.get()) {
 
         // Drop any .iterator() that's returned
-        if (new MethodMatcher("java.util.stream.BaseStream iterator()", true).matches(method)) {
-          return visit(method.getSelect(), executionContext);
+        if (new MethodMatcher("java.util.stream.BaseStream iterator()", true).matches(mi)) {
+          return visit(mi.getSelect(), executionContext);
         }
 
         // Change any Arrays.stream to Arrays.asList
-        if (new MethodMatcher("java.util.Arrays stream(..)", true).matches(method)) {
-          return method.withName(method.getName().withSimpleName("asList"));
+        if (new MethodMatcher("java.util.Arrays stream(..)", true).matches(mi)) {
+          return mi.withName(mi.getName().withSimpleName("asList"));
         }
       }
 
-      return super.visitMethodInvocation(method, executionContext);
+      return super.visitMethodInvocation(mi, executionContext);
     }
   }
 }

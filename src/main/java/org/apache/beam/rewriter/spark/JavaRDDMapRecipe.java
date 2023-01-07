@@ -57,14 +57,14 @@ public class JavaRDDMapRecipe extends Recipe {
         J.MethodInvocation method, ExecutionContext executionContext) {
       J.MethodInvocation mi = super.visitMethodInvocation(method, executionContext);
 
-      if (filterMatcher.matches(method)) {
-        Parameterized parameterized = (Parameterized) method.getArguments().get(0).getType();
+      if (filterMatcher.matches(mi)) {
+        Parameterized parameterized = (Parameterized) mi.getArguments().get(0).getType();
         JavaType.Class typeClass = (JavaType.Class) parameterized.getTypeParameters().get(1);
 
         String type = typeClass.getClassName();
         mi =
-            method
-                .withName(method.getName().withSimpleName("apply"))
+            mi
+                .withName(mi.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
@@ -76,9 +76,9 @@ public class JavaRDDMapRecipe extends Recipe {
                         .imports("org.apache.beam.sdk.values.TypeDescriptor")
                         .javaParser(CookbookFactory.beamParser())
                         .build(),
-                    method.getCoordinates().replaceMethod(),
-                    method.getSelect(),
-                    method.getArguments().get(0));
+                    mi.getCoordinates().replaceMethod(),
+                    mi.getSelect(),
+                    mi.getArguments().get(0));
         maybeAddImport("org.apache.beam.sdk.transforms.MapElements");
         maybeAddImport("org.apache.beam.sdk.values.TypeDescriptor");
         maybeAddImport("org.apache.beam.sdk.values.TypeDescriptors");

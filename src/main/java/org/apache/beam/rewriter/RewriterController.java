@@ -55,7 +55,7 @@ public class RewriterController {
     }
 
     // Keeping it to show effect :D
-    TimeUnit.SECONDS.sleep(1L);
+    TimeUnit.SECONDS.sleep(2L);
 
     return safeFormat(results.get(0).getAfter().printAll());
   }
@@ -122,7 +122,7 @@ public class RewriterController {
       List<Result> results = cookbookConfig.getCookbook().run(cus, ctx).getResults();
 
       // Keeping it to show effect :D
-      TimeUnit.SECONDS.sleep(1L);
+      TimeUnit.SECONDS.sleep(2L);
 
       return ResponseEntity.ok()
           .contentType(MediaType.APPLICATION_OCTET_STREAM)

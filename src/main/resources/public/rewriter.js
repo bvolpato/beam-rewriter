@@ -6,6 +6,17 @@ editor.session.setMode("ace/mode/java");
 
 function loaderOn() {
   document.getElementById("loader").style.display = "block";
+  document.getElementById("loader").src = 'cooking1.gif';
+
+  setTimeout(function() {
+    document.getElementById("loader").src = 'cooking2.gif';
+
+    setTimeout(function() {
+      document.getElementById("loader").src = 'cooking3.gif';
+    }, 3500);
+
+  }, 2000);
+
 }
 function loaderOff() {
   document.getElementById("loader").style.display = "none";

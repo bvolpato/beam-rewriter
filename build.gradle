@@ -18,7 +18,7 @@ def googleJavaFormatVersion = '1.15.0'
 repositories {
     mavenCentral()
     maven {
-        url "https://packages.confluent.io/maven"
+        url("https://packages.confluent.io/maven")
     }
 }
 
