@@ -4,11 +4,11 @@ import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.jetbrains.annotations.NotNull;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
@@ -55,15 +55,12 @@ public class JavaRDDFilterRecipe extends Recipe {
 
     @Override
     public J.MethodInvocation visitMethodInvocation(
-        J.MethodInvocation methodZ, ExecutionContext executionContext) {
-      J.MethodInvocation mi = super.visitMethodInvocation(methodZ, executionContext);
+        J.MethodInvocation mi, ExecutionContext executionContext) {
+      mi = super.visitMethodInvocation(mi, executionContext);
 
       if (filterMatcher.matches(mi)) {
-        System.out.println("Method1: " + mi.getMethodType());
-
         mi =
-            mi
-                .withName(mi.getName().withSimpleName("apply"))
+            mi.withName(mi.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
@@ -75,14 +72,10 @@ public class JavaRDDFilterRecipe extends Recipe {
                     mi.getCoordinates().replaceMethod(),
                     mi.getSelect(),
                     mi.getArguments().get(0));
-
-        System.out.println("Method2: " + mi.getMethodType());
-
         maybeAddImport("org.apache.beam.sdk.transforms.Filter");
-        return mi;
-      } else {
-        return mi;
       }
+
+      return mi;
     }
   }
 }
