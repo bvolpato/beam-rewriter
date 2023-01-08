@@ -112,4 +112,24 @@ class SparkMigrationCookbookTest implements RewriteTest {
          }
         """));
   }
+
+  @Test
+  void testRewriteFilterReduceLambda() {
+
+    rewriteRun(java("""
+          class Convert {
+              public void run(JavaRDD<Integer> rdd) {
+                JavaRDD<Integer> positive = rdd.filter(x -> x > 0);
+                JavaRDD<Integer> sum = positive.reduce((x, y) -> x + y);
+              }
+          }
+        """, """
+         class Convert {
+             public void run(PCollection<Integer> rdd) {
+                 PCollection<Integer> positive = rdd.apply("Filter", Filter.by(x -> x > 0));
+                 PCollection<Integer> sum = positive.apply("CombineGlobally", Combine.globally((x, y) -> x + y));
+             }
+         }
+        """));
+  }
 }
