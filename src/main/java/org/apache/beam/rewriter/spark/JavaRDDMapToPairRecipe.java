@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.apache.beam.rewriter.common.UsesPackage;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -39,7 +40,7 @@ public class JavaRDDMapToPairRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.AbstractJavaRDDLike");
+    return new UsesPackage<>("org.apache.spark.api.java");
   }
 
   @Override
@@ -54,15 +55,15 @@ public class JavaRDDMapToPairRecipe extends Recipe {
 
     @Override
     public J.MethodInvocation visitMethodInvocation(
-        J.MethodInvocation method, ExecutionContext executionContext) {
-      if (filterPairMatcher.matches(method)) {
-        Parameterized parameterized = (Parameterized) method.getArguments().get(0).getType();
+        J.MethodInvocation methodZ, ExecutionContext executionContext) {
+      J.MethodInvocation mi = super.visitMethodInvocation(methodZ, executionContext);
+      if (filterPairMatcher.matches(mi)) {
+        Parameterized parameterized = (Parameterized) mi.getArguments().get(0).getType();
         String type1 = ((JavaType.Class) parameterized.getTypeParameters().get(1)).getClassName();
         String type2 = ((JavaType.Class) parameterized.getTypeParameters().get(2)).getClassName();
 
-        J.MethodInvocation mi =
-            method
-                .withName(method.getName().withSimpleName("apply"))
+        mi =
+            mi.withName(mi.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
@@ -77,16 +78,15 @@ public class JavaRDDMapToPairRecipe extends Recipe {
                         .imports("org.apache.beam.sdk.values.TypeDescriptors")
                         .javaParser(CookbookFactory.beamParser())
                         .build(),
-                    method.getCoordinates().replaceMethod(),
-                    method.getSelect(),
-                    method.getArguments().get(0));
+                    mi.getCoordinates().replaceMethod(),
+                    mi.getSelect(),
+                    mi.getArguments().get(0));
         maybeAddImport("org.apache.beam.sdk.transforms.MapElements");
         maybeAddImport("org.apache.beam.sdk.values.TypeDescriptor");
         maybeAddImport("org.apache.beam.sdk.values.TypeDescriptors");
-        return mi;
-      } else {
-        return super.visitMethodInvocation(method, executionContext);
       }
+
+      return mi;
     }
   }
 }

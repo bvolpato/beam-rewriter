@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.apache.beam.rewriter.common.UsesPackage;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.Tree;
@@ -49,7 +50,7 @@ public class JavaRDDForEachRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.JavaRDD");
+    return new UsesPackage<>("org.apache.spark.api.java");
   }
 
   @Override

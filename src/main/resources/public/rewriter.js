@@ -13,6 +13,11 @@ function loaderOn() {
 
     setTimeout(function() {
       document.getElementById("loader").src = 'cooking3.gif';
+
+      setTimeout(function() {
+        document.getElementById("loader").src = 'cooking1.gif';
+      }, 3000);
+
     }, 3500);
 
   }, 2000);

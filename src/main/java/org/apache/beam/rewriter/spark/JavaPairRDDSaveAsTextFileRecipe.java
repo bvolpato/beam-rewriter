@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.apache.beam.rewriter.common.UsesPackage;
 import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
@@ -45,7 +46,7 @@ public class JavaPairRDDSaveAsTextFileRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.JavaPairRDD");
+    return new UsesPackage<>("org.apache.spark.api.java");
   }
 
   @Override

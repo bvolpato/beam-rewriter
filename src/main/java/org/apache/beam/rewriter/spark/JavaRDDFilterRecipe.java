@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.apache.beam.rewriter.common.UsesPackage;
 import org.jetbrains.annotations.NotNull;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
@@ -38,7 +39,7 @@ public class JavaRDDFilterRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.JavaRDD");
+    return new UsesPackage<>("org.apache.spark.api.java");
   }
 
   @Override
@@ -50,7 +51,11 @@ public class JavaRDDFilterRecipe extends Recipe {
 
     final MethodMatcher filterMatcher =
         new MethodMatcher(
-            "org.apache.spark.api.java.JavaRDD filter(org.apache.spark.api.java.function.Function)",
+            "org.apache.spark.api.java.JavaRDD filter(..)",
+            false);
+    final MethodMatcher filterPairMatcher =
+        new MethodMatcher(
+            "org.apache.spark.api.java.JavaPairRDD filter(..)",
             false);
 
     @Override
@@ -58,7 +63,7 @@ public class JavaRDDFilterRecipe extends Recipe {
         J.MethodInvocation mi, ExecutionContext executionContext) {
       mi = super.visitMethodInvocation(mi, executionContext);
 
-      if (filterMatcher.matches(mi)) {
+      if (filterMatcher.matches(mi) || filterPairMatcher.matches(mi)) {
         mi =
             mi.withName(mi.getName().withSimpleName("apply"))
                 .withTemplate(

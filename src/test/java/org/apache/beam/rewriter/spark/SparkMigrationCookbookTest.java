@@ -4,7 +4,6 @@ import static org.openrewrite.java.Assertions.java;
 
 import org.apache.beam.rewriter.common.CookbookEnum;
 import org.apache.beam.rewriter.common.CookbookFactory;
-import org.apache.spark.api.java.JavaRDD;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
@@ -117,6 +116,8 @@ class SparkMigrationCookbookTest implements RewriteTest {
   void testRewriteFilterReduceLambda() {
 
     rewriteRun(java("""
+          import org.apache.spark.api.java.JavaRDD;
+
           class Convert {
               public void run(JavaRDD<Integer> rdd) {
                 JavaRDD<Integer> positive = rdd.filter(x -> x > 0);
@@ -124,10 +125,41 @@ class SparkMigrationCookbookTest implements RewriteTest {
               }
           }
         """, """
+         import org.apache.beam.sdk.transforms.Combine;
+         import org.apache.beam.sdk.transforms.Filter;
+         import org.apache.beam.sdk.values.PCollection;
+
          class Convert {
              public void run(PCollection<Integer> rdd) {
                  PCollection<Integer> positive = rdd.apply("Filter", Filter.by(x -> x > 0));
                  PCollection<Integer> sum = positive.apply("CombineGlobally", Combine.globally((x, y) -> x + y));
+             }
+         }
+        """));
+  }
+
+  @Test
+  void testRewriteReduceFilterLambda() {
+    rewriteRun(java("""
+          import org.apache.spark.api.java.JavaRDD;
+          import scala.Tuple2;
+
+          class Convert {
+              public void run(JavaRDD<String> rdd) {
+                rdd.mapToPair(word -> new Tuple2<>(word, 1)).reduceByKey((x, y) -> x + y).filter(t -> t._2 > 1);
+              }
+          }
+        """, """
+         import org.apache.beam.sdk.transforms.Combine;
+         import org.apache.beam.sdk.transforms.Filter;
+         import org.apache.beam.sdk.transforms.MapElements;
+         import org.apache.beam.sdk.values.KV;
+         import org.apache.beam.sdk.values.PCollection;
+         import org.apache.beam.sdk.values.TypeDescriptors;
+         
+         class Convert {
+             public void run(PCollection<String> rdd) {
+                 rdd.apply("MapToPair", MapElements.into(TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.integers())).via(word -> KV.of(word, 1))).apply("CombinePerKey", Combine.perKey((x, y) -> x + y)).apply("Filter", Filter.by(t -> t.getValue() > 1));
              }
          }
         """));

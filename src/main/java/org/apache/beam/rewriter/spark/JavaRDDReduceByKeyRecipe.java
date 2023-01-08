@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.apache.beam.rewriter.common.UsesPackage;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -38,7 +39,7 @@ public class JavaRDDReduceByKeyRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.JavaPairRDD");
+    return new UsesPackage<>("org.apache.spark.api.java");
   }
 
   @Override
@@ -49,16 +50,16 @@ public class JavaRDDReduceByKeyRecipe extends Recipe {
   static class Visitor extends JavaIsoVisitor<ExecutionContext> {
 
     final MethodMatcher filterMatcher =
-        new MethodMatcher("org.apache.spark.api.java.JavaPairRDD reduceByKey(..)", false);
+        new MethodMatcher("org.apache.spark.api.java.JavaPairRDD reduceByKey(..)", true);
 
     @Override
     public J.MethodInvocation visitMethodInvocation(
-        J.MethodInvocation method, ExecutionContext executionContext) {
-      J.MethodInvocation mi = super.visitMethodInvocation(method, executionContext);
-      if (filterMatcher.matches(method)) {
+        J.MethodInvocation methodZ, ExecutionContext executionContext) {
+      J.MethodInvocation mi = super.visitMethodInvocation(methodZ, executionContext);
+      if (filterMatcher.matches(mi)) {
         mi =
-            method
-                .withName(method.getName().withSimpleName("apply"))
+            mi
+                .withName(mi.getName().withSimpleName("apply"))
                 .withTemplate(
                     JavaTemplate.builder(
                             this::getCursor,
@@ -67,9 +68,9 @@ public class JavaRDDReduceByKeyRecipe extends Recipe {
                         .imports("org.apache.beam.sdk.transforms.SerializableFunction")
                         .javaParser(CookbookFactory.beamParser())
                         .build(),
-                    method.getCoordinates().replaceMethod(),
-                    method.getSelect(),
-                    method.getArguments().get(0));
+                    mi.getCoordinates().replaceMethod(),
+                    mi.getSelect(),
+                    mi.getArguments().get(0));
         maybeAddImport("org.apache.beam.sdk.transforms.Combine");
         return mi;
       } else {

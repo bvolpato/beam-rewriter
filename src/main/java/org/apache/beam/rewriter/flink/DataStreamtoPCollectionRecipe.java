@@ -3,6 +3,7 @@ package org.apache.beam.rewriter.flink;
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
+import org.apache.beam.rewriter.common.UsesPackage;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -35,7 +36,7 @@ public class DataStreamtoPCollectionRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.flink.streaming.api.datastream.DataStream");
+    return new UsesPackage<>("org.apache.flink.streaming.api");
   }
 
   @Override

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.util.Set;
 import org.apache.beam.rewriter.common.CookbookFactory;
+import org.apache.beam.rewriter.common.UsesPackage;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -38,7 +39,7 @@ public class JavaRDDUnionRecipe extends Recipe {
 
   @Override
   protected TreeVisitor<?, ExecutionContext> getSingleSourceApplicableTest() {
-    return new UsesType<>("org.apache.spark.api.java.JavaRDD");
+    return new UsesPackage<>("org.apache.spark.api.java");
   }
 
   @Override
