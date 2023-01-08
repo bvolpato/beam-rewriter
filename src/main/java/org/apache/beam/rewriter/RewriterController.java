@@ -140,7 +140,7 @@ public class RewriterController {
       content =
           new Formatter(JavaFormatterOptions.builder().formatJavadoc(true).build())
               .formatSourceAndFixImports(content);
-    } catch (Exception e) {
+    } catch (Throwable e) {
       e.printStackTrace();
     }
 
