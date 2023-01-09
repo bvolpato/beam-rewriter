@@ -5,16 +5,17 @@ import java.time.Duration;
 import java.util.Set;
 import org.apache.beam.rewriter.common.CookbookFactory;
 import org.apache.beam.rewriter.common.UsesPackage;
-import org.jetbrains.annotations.NotNull;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
-import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class JavaRDDFilterRecipe extends Recipe {
 
   @Override
@@ -50,13 +51,9 @@ public class JavaRDDFilterRecipe extends Recipe {
   static class Visitor extends JavaIsoVisitor<ExecutionContext> {
 
     final MethodMatcher filterMatcher =
-        new MethodMatcher(
-            "org.apache.spark.api.java.JavaRDD filter(..)",
-            false);
+        new MethodMatcher("org.apache.spark.api.java.JavaRDD filter(..)", false);
     final MethodMatcher filterPairMatcher =
-        new MethodMatcher(
-            "org.apache.spark.api.java.JavaPairRDD filter(..)",
-            false);
+        new MethodMatcher("org.apache.spark.api.java.JavaPairRDD filter(..)", false);
 
     @Override
     public J.MethodInvocation visitMethodInvocation(

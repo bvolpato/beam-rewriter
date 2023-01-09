@@ -79,6 +79,7 @@ import org.openrewrite.java.tree.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Recipe that logs each visit step, so can better understand the flow. */
 public class DebuggingRecipe extends Recipe {
 
   private static final Logger LOG = LoggerFactory.getLogger(DebuggingRecipe.class);

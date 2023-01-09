@@ -15,6 +15,9 @@ import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class JavaRDDReduceByKeyRecipe extends Recipe {
 
   @Override

@@ -2,7 +2,6 @@ package org.apache.beam.rewriter.spark;
 
 import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.apache.beam.rewriter.common.UsesPackage;
@@ -13,11 +12,9 @@ import org.openrewrite.java.ChangeType;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.J.MethodDeclaration;
-import org.openrewrite.java.tree.J.TypeParameter;
-import org.openrewrite.java.tree.J.TypeParameters;
 import org.openrewrite.java.tree.JavaType;
-import org.openrewrite.java.tree.TypeTree;
 
+/** See {@link #getDescription()}. */
 public class FunctionRecipe extends Recipe {
 
   @Override

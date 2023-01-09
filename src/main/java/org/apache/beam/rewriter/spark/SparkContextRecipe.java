@@ -15,6 +15,9 @@ import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class SparkContextRecipe extends Recipe {
 
   @Override
@@ -48,8 +51,6 @@ public class SparkContextRecipe extends Recipe {
   }
 
   static class Visitor extends JavaVisitor<ExecutionContext> {
-    MethodMatcher pipelineConstructorMatcher =
-        new MethodMatcher("org.apache.spark.api.java.JavaSparkContext <constructor>(..)", true);
 
     @Override
     public J.CompilationUnit visitCompilationUnit(J.CompilationUnit cu, ExecutionContext ctx) {
@@ -69,9 +70,11 @@ public class SparkContextRecipe extends Recipe {
       return identifier;
     }
 
+    MethodMatcher pipelineConstructorMatcher =
+        new MethodMatcher("org.apache.spark.api.java.JavaSparkContext <constructor>(..)", true);
+
     @Override
     public J visitNewClass(J.NewClass newClass, ExecutionContext ctx) {
-      System.out.println("visitNewClass: " + newClass);
       if (pipelineConstructorMatcher.matches(newClass)) {
         JavaType.Method ctorType = newClass.getConstructorType();
 

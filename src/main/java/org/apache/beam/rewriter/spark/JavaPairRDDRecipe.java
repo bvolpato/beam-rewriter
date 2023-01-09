@@ -14,7 +14,6 @@ import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.ChangeType;
 import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.TypeMatcher;
-import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.J.ParameterizedType;
@@ -29,6 +28,7 @@ import org.openrewrite.java.tree.Space;
 import org.openrewrite.java.tree.TypeTree;
 import org.openrewrite.marker.Markers;
 
+/** See {@link #getDescription()}. */
 public class JavaPairRDDRecipe extends Recipe {
 
   @Override

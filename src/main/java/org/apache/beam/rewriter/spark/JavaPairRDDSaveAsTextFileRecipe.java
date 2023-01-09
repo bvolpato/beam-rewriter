@@ -22,6 +22,9 @@ import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.JavaType.Parameterized;
 import org.openrewrite.java.tree.JavaType.ShallowClass;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class JavaPairRDDSaveAsTextFileRecipe extends Recipe {
 
   @Override

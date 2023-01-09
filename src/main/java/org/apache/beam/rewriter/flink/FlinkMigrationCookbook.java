@@ -4,6 +4,7 @@ import org.apache.beam.rewriter.beam.AddMissingPipelineRunRecipe;
 import org.apache.beam.rewriter.beam.BeamCleanupCookbook;
 import org.openrewrite.Recipe;
 
+/** See {@link #getDescription()}. */
 public class FlinkMigrationCookbook extends Recipe {
 
   public FlinkMigrationCookbook() {

@@ -16,6 +16,7 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.J.FieldAccess;
 import org.openrewrite.java.tree.JavaType;
 
+/** See {@link #getDescription()}. */
 public class Tuple2Recipe extends Recipe {
 
   @Override
@@ -105,7 +106,8 @@ public class Tuple2Recipe extends Recipe {
             fa.getTarget());
       } else if (fa.getSimpleName().equals("_2")) {
         return fa.withTemplate(
-            JavaTemplate.builder(this::getCursor, "#{any(org.apache.beam.sdk.values.KV)}.getValue()")
+            JavaTemplate.builder(
+                    this::getCursor, "#{any(org.apache.beam.sdk.values.KV)}.getValue()")
                 .imports("org.apache.beam.sdk.values.KV")
                 .javaParser(CookbookFactory.beamParser())
                 .build(),

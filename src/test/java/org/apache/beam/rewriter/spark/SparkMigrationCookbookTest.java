@@ -164,4 +164,57 @@ class SparkMigrationCookbookTest implements RewriteTest {
          }
         """));
   }
+
+  @Test
+  void testRewriteFilter() {
+    rewriteRun(
+        java(
+            """
+                  import org.apache.spark.api.java.JavaRDD;
+                  
+                  class Convert {
+                    public void run(JavaRDD<String> rdd) {
+                      JavaRDD<String> filtered = rdd
+                        .filter(word -> word.length() > 1);
+                    }
+                  }
+                """,
+            """
+                  import org.apache.beam.sdk.transforms.Filter;
+                  import org.apache.beam.sdk.values.PCollection;
+                  
+                  class Convert {
+                      public void run(PCollection<String> rdd) {
+                          PCollection<String> filtered = rdd
+                                  .apply("Filter", Filter.by(word -> word.length() > 1));
+                      }
+                  }
+                """
+        )
+    );
+  }
+
+  @Test
+  void testRewriteTextFile() {
+    rewriteRun(java("""
+          import org.apache.spark.api.java.JavaRDD;
+          import org.apache.spark.api.java.JavaSparkContext;
+          
+          class Convert {
+              public void run(JavaSparkContext sparkContext) {
+                  JavaRDD<String> rdd = sparkContext.textFile("gs://beam-samples/shakespeare.txt");
+              }
+          }
+        """, """
+         import org.apache.beam.sdk.Pipeline;
+         import org.apache.beam.sdk.io.TextIO;
+         import org.apache.beam.sdk.values.PCollection;
+
+         class Convert {
+             public void run(Pipeline pipeline) {
+                 PCollection<String> rdd = pipeline.apply("ReadTextFile", TextIO.read().from("gs://beam-samples/shakespeare.txt"));
+             }
+         }
+        """));
+  }
 }

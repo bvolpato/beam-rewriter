@@ -4,6 +4,9 @@ import org.apache.beam.rewriter.beam.AddMissingPipelineRunRecipe;
 import org.apache.beam.rewriter.beam.BeamCleanupCookbook;
 import org.openrewrite.Recipe;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class SparkMigrationCookbook extends Recipe {
 
   public SparkMigrationCookbook() {

@@ -12,6 +12,9 @@ import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class AddMissingPipelineRunRecipe extends Recipe {
 
   @Override

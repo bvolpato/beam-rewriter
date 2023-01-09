@@ -25,6 +25,11 @@ import org.openrewrite.java.tree.JavaType.FullyQualified;
 import org.openrewrite.java.tree.TypeUtils;
 import org.openrewrite.marker.SearchResult;
 
+/**
+ * Visitor that validates if a class uses a specific package.
+ *
+ * @param <P> Context type
+ */
 public class UsesPackage<P> extends JavaIsoVisitor<P> {
   private final String packageName;
 

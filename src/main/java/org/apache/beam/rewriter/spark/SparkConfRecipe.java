@@ -15,6 +15,9 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.J.VariableDeclarations.NamedVariable;
 import org.openrewrite.java.tree.JavaType;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class SparkConfRecipe extends Recipe {
 
   @Override

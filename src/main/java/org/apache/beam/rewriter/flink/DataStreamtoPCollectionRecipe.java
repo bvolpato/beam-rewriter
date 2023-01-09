@@ -9,9 +9,9 @@ import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.ChangeType;
 import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
+/** See {@link #getDescription()}. */
 public class DataStreamtoPCollectionRecipe extends Recipe {
 
   @Override

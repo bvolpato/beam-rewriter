@@ -25,6 +25,9 @@ import org.openrewrite.java.tree.Space;
 import org.openrewrite.java.tree.Statement;
 import org.openrewrite.marker.Markers;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class JavaRDDForEachRecipe extends Recipe {
 
   // TODO: hope there would be a better function, going to propose one

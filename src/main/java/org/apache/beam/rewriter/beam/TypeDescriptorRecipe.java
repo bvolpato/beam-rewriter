@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.apache.beam.rewriter.common.CookbookFactory;
 import org.apache.beam.sdk.values.Row;
-import org.apache.beam.sdk.values.TypeDescriptors;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -25,6 +24,7 @@ import org.openrewrite.java.tree.JavaType.Parameterized;
 import org.openrewrite.java.tree.JavaType.ShallowClass;
 import org.openrewrite.marker.Markers;
 
+/** See {@link #getDescription()}. */
 public class TypeDescriptorRecipe extends Recipe {
 
   @Override
@@ -59,21 +59,22 @@ public class TypeDescriptorRecipe extends Recipe {
 
   static class Visitor extends JavaIsoVisitor<ExecutionContext> {
 
-    private static final Map<Class<?>, String> classToName = new HashMap<>() {
-      {
-        // TODO: finish the list
-        put(String.class, "strings");
-        put(Integer.class, "integers");
-        put(Row.class, "rows");
-        put(BigInteger.class, "bigintegers");
-        put(BigDecimal.class, "bigdecimals");
-        put(Double.class, "doubles");
-        put(Boolean.class, "booleans");
-        put(Byte.class, "bytes");
-        put(Long.class, "longs");
-        put(Void.class, "voids");
-      }
-    };
+    private static final Map<Class<?>, String> classToName =
+        new HashMap<>() {
+          {
+            // TODO: finish the list
+            put(String.class, "strings");
+            put(Integer.class, "integers");
+            put(Row.class, "rows");
+            put(BigInteger.class, "bigintegers");
+            put(BigDecimal.class, "bigdecimals");
+            put(Double.class, "doubles");
+            put(Boolean.class, "booleans");
+            put(Byte.class, "bytes");
+            put(Long.class, "longs");
+            put(Void.class, "voids");
+          }
+        };
     final MethodMatcher filterMatcher =
         new MethodMatcher("org.apache.beam.sdk.values.TypeDescriptor of(..)", false);
 

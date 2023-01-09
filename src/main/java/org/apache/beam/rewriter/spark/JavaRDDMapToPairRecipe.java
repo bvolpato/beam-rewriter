@@ -16,6 +16,9 @@ import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.JavaType.Parameterized;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class JavaRDDMapToPairRecipe extends Recipe {
 
   @Override

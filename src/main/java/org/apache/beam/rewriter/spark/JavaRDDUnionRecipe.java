@@ -15,6 +15,9 @@ import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 
+/**
+ * See {@link #getDescription()}.
+ */
 public class JavaRDDUnionRecipe extends Recipe {
 
   @Override
@@ -58,8 +61,6 @@ public class JavaRDDUnionRecipe extends Recipe {
     public J visitMethodInvocation(
         J.MethodInvocation method, ExecutionContext executionContext) {
       if (filterMatcher.matches(method)) {
-        System.out.println("Method1: " + method.getMethodType());
-
         J mi =
             method
                 .withName(method.getName().withSimpleName("of"))
@@ -75,8 +76,6 @@ public class JavaRDDUnionRecipe extends Recipe {
                     method.getCoordinates().replace(),
                     method.getSelect(),
                     method.getArguments().get(0));
-
-        System.out.println("Method2: " + mi);
 
         maybeAddImport("org.apache.beam.sdk.transforms.Flatten");
         maybeAddImport("org.apache.beam.sdk.values.PCollection");
