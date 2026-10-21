@@ -16,7 +16,7 @@ def beamVersion = '2.77.0'
 def sparkVersion = '4.2.0'
 def flinkVersion = '1.20.5'
 def openrewriteVersion = '1.13.1'
-def googleJavaFormatVersion = '1.37.0'
+def googleJavaFormatVersion = '1.15.0'
 
 repositories {
     mavenCentral()
