@@ -7,12 +7,15 @@ plugins {
 
 group = 'org.apache.beam'
 version = '2.45.0-SNAPSHOT'
-sourceCompatibility = '17'
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 def beamVersion = '2.77.0'
 def sparkVersion = '4.2.0'
-def flinkVersion = '2.3.0'
-def openrewriteVersion = '3.38.0'
+def flinkVersion = '1.20.5'
+def openrewriteVersion = '1.13.1'
 def googleJavaFormatVersion = '1.37.0'
 
 repositories {
@@ -60,7 +63,7 @@ dependencies {
     implementation("org.apache.beam:beam-runners-google-cloud-dataflow-java")
 
     // Prevent conflicts
-    implementation("io.github.classgraph:classgraph:6.0.0")
+    implementation("io.github.classgraph:classgraph:4.8.199")
 
 }
 
@@ -68,6 +71,7 @@ configurations {
     all {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j2-impl'
     }
 }
 
